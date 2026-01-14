@@ -174,8 +174,8 @@ export class GroqUnifiedService {
       const result = {
         classification,
         clustering,
-        successFactors,
-        gamePredictions,
+        successFactors: successFactors ?? undefined,
+        gamePredictions: gamePredictions ?? undefined,
       };
 
       // Mettre en cache
