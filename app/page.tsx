@@ -153,12 +153,38 @@ export default function Home() {
               <StatsCard
                 title="Type de joueur"
                 value={results.classification.type}
-                subtitle={`${Math.round(results.classification.probability * 100)}% de confiance`}
+                subtitle={
+                  <div className="space-y-1">
+                    <div>{Math.round(results.classification.probability * 100)}% de confiance</div>
+                    {results.classification.usingGroq ? (
+                      <div className="text-xs text-green-600 dark:text-green-400">
+                        🤖 Groq ({results.classification.model})
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        ⚙️ Logique basique
+                      </div>
+                    )}
+                  </div>
+                }
               />
               <StatsCard
                 title="Cluster"
                 value={results.clustering.clusterLabel}
-                subtitle={`Cluster #${results.clustering.cluster}`}
+                subtitle={
+                  <div className="space-y-1">
+                    <div>Cluster #{results.clustering.cluster}</div>
+                    {results.clustering.usingGroq ? (
+                      <div className="text-xs text-green-600 dark:text-green-400">
+                        🤖 Groq ({results.clustering.model})
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        ⚙️ Logique basique
+                      </div>
+                    )}
+                  </div>
+                }
               />
             </div>
 

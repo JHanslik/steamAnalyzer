@@ -42,12 +42,16 @@ export interface ClassificationResult {
   type: 'Hardcore' | 'Casual';
   probability: number;
   threshold: number;
+  usingGroq?: boolean;
+  model?: string;
 }
 
 export interface ClusteringResult {
   cluster: number;
   clusterLabel: string;
   characteristics: string[];
+  usingGroq?: boolean;
+  model?: string;
 }
 
 export interface GameRecommendation {

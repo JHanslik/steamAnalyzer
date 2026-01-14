@@ -55,14 +55,20 @@ export async function POST(request: NextRequest) {
     // 4. Encoder les features pour le ML
     const encodedFeatures = preprocessingService.encodeCategoricalFeatures(features);
 
-    // 5. Classification
-    const classification = mlService.classifyPlayer(
+    // 5. Classification (avec Groq si disponible)
+    const classification = await mlService.classifyPlayer(
       encodedFeatures,
-      playerData.totalPlaytime
+      playerData.totalPlaytime,
+      playerData.games,
+      features
     );
 
-    // 6. Clustering
-    const clustering = mlService.clusterPlayer(encodedFeatures);
+    // 6. Clustering (avec Groq si disponible)
+    const clustering = await mlService.clusterPlayer(
+      encodedFeatures,
+      playerData.games,
+      features
+    );
 
     // 7. Recommandations
     const recommendations = await recommendationService.generateRecommendations(
