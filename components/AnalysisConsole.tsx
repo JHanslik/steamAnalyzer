@@ -47,7 +47,7 @@ export default function AnalysisConsole({ logs }: AnalysisConsoleProps) {
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="ml-4 text-sm font-medium text-gray-300">Console d'analyse</span>
+            <span className="ml-4 text-sm font-medium text-gray-300">Console d&apos;analyse</span>
           </div>
           <div className="text-xs text-gray-400">
             {logs.length} ligne{logs.length > 1 ? 's' : ''}
