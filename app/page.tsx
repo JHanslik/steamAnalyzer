@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import SteamIdForm from '@/components/SteamIdForm';
-import StatsCard from '@/components/StatsCard';
-import PlaytimeChart from '@/components/PlaytimeChart';
-import GenreChart from '@/components/GenreChart';
-import RecommendationsList from '@/components/RecommendationsList';
-import AnalysisConsole from '@/components/AnalysisConsole';
-import RawDataView from '@/components/RawDataView';
-import { AnalysisResult } from '@/types';
+import { useState, useEffect, useRef } from "react";
+import SteamIdForm from "@/components/SteamIdForm";
+import StatsCard from "@/components/StatsCard";
+import PlaytimeChart from "@/components/PlaytimeChart";
+import GenreChart from "@/components/GenreChart";
+import RecommendationsList from "@/components/RecommendationsList";
+import AnalysisConsole from "@/components/AnalysisConsole";
+import RawDataView from "@/components/RawDataView";
+import { AnalysisResult } from "@/types";
 
 interface LogEntry {
   message: string;
   timestamp: Date;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
 }
 
 export default function Home() {
@@ -23,11 +23,11 @@ export default function Home() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const logsRef = useRef<LogEntry[]>([]);
 
-  const addLog = (message: string, type: LogEntry['type'] = 'info') => {
+  const addLog = (message: string, type: LogEntry["type"] = "info") => {
     const newLog: LogEntry = {
       message,
       timestamp: new Date(),
-      type
+      type,
     };
     logsRef.current = [...logsRef.current, newLog];
     setLogs([...logsRef.current]);
@@ -42,65 +42,65 @@ export default function Home() {
 
     try {
       // Étape 1: Connexion à l'API Steam
-      addLog('Connexion à l\'API Steam...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      addLog("Connexion à l'API Steam...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      addLog('Récupération des données du profil...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 300));
+      addLog("Récupération des données du profil...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const response = await fetch('/api/steam/analyze', {
-        method: 'POST',
+      const response = await fetch("/api/steam/analyze", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ steamId }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        addLog(`Erreur: ${data.error || 'Erreur lors de l\'analyse'}`, 'error');
-        throw new Error(data.error || 'Erreur lors de l\'analyse');
+        addLog(`Erreur: ${data.error || "Erreur lors de l'analyse"}`, "error");
+        throw new Error(data.error || "Erreur lors de l'analyse");
       }
 
       // Simuler les étapes pendant le chargement
-      addLog('Données récupérées avec succès', 'success');
-      await new Promise(resolve => setTimeout(resolve, 400));
+      addLog("Données récupérées avec succès", "success");
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
-      addLog('Préprocessing des données...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      addLog("Préprocessing des données...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      addLog('Calcul des features quantitatives...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 400));
+      addLog("Calcul des features quantitatives...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
-      addLog('Analyse des genres et styles de jeu...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      addLog("Analyse des genres et styles de jeu...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      addLog('Calcul des statistiques descriptives...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 400));
+      addLog("Calcul des statistiques descriptives...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
-      addLog('Classification du type de joueur...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      addLog("Classification du type de joueur...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      addLog('Clustering par style de jeu...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 400));
+      addLog("Clustering par style de jeu...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
-      addLog('Génération des recommandations...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      addLog("Génération des recommandations...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const data = await response.json();
-      
-      addLog('Analyse terminée avec succès !', 'success');
-      await new Promise(resolve => setTimeout(resolve, 300));
+
+      addLog("Analyse terminée avec succès !", "success");
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       setResults(data);
-      
+
       // Effacer les logs après un court délai en cas de succès
       setTimeout(() => {
         setLogs([]);
         logsRef.current = [];
       }, 1000);
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
+      setError(err.message || "Une erreur est survenue");
       // Garder les logs en cas d'erreur
     } finally {
       setIsLoading(false);
@@ -112,12 +112,8 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Steam Player Analyzer
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Analysez votre profil Steam et recevez des recommandations personnalisées
-          </p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Steam Player Analyzer</h1>
+          <p className="text-gray-600 dark:text-gray-400">Analysez votre profil Steam et recevez des recommandations personnalisées</p>
         </div>
 
         {/* Formulaire */}
@@ -145,11 +141,7 @@ export default function Home() {
                 value={`${Math.round(results.playerData.totalPlaytime / 60)}h`}
                 subtitle={`${results.playerData.totalGames} jeux`}
               />
-              <StatsCard
-                title="Temps moyen par jeu"
-                value={`${Math.round(results.features.averagePlaytime / 60)}h`}
-                subtitle="Moyenne"
-              />
+              <StatsCard title="Temps moyen par jeu" value={`${Math.round(results.features.averagePlaytime / 60)}h`} subtitle="Moyenne" />
               <StatsCard
                 title="Type de joueur"
                 value={results.classification.type}
@@ -157,13 +149,9 @@ export default function Home() {
                   <div className="space-y-1">
                     <div>{Math.round(results.classification.probability * 100)}% de confiance</div>
                     {results.classification.usingGroq ? (
-                      <div className="text-xs text-green-600 dark:text-green-400">
-                        🤖 Groq ({results.classification.model})
-                      </div>
+                      <div className="text-xs text-green-600 dark:text-green-400">🤖 Groq ({results.classification.model})</div>
                     ) : (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        ⚙️ Logique basique
-                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">⚙️ Logique basique</div>
                     )}
                   </div>
                 }
@@ -175,13 +163,9 @@ export default function Home() {
                   <div className="space-y-1">
                     <div>Cluster #{results.clustering.cluster}</div>
                     {results.clustering.usingGroq ? (
-                      <div className="text-xs text-green-600 dark:text-green-400">
-                        🤖 Groq ({results.clustering.model})
-                      </div>
+                      <div className="text-xs text-green-600 dark:text-green-400">🤖 Groq ({results.clustering.model})</div>
                     ) : (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        ⚙️ Logique basique
-                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">⚙️ Logique basique</div>
                     )}
                   </div>
                 }
@@ -196,9 +180,7 @@ export default function Home() {
 
             {/* Statistiques détaillées */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Statistiques détaillées
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Statistiques détaillées</h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Moyenne</p>
@@ -225,9 +207,7 @@ export default function Home() {
 
             {/* Caractéristiques du cluster */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Caractéristiques de votre profil
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Caractéristiques de votre profil</h2>
               <ul className="list-disc list-inside space-y-2">
                 <li className="text-gray-700 dark:text-gray-300">
                   Genre dominant: <strong>{results.features.dominantGenre}</strong>
@@ -240,7 +220,7 @@ export default function Home() {
                 </li>
                 {results.clustering.characteristics.length > 0 && (
                   <li className="text-gray-700 dark:text-gray-300">
-                    Caractéristiques: <strong>{results.clustering.characteristics.join(', ')}</strong>
+                    Caractéristiques: <strong>{results.clustering.characteristics.join(", ")}</strong>
                   </li>
                 )}
               </ul>

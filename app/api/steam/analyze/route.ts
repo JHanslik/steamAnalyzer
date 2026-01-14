@@ -1,27 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { SteamService } from '@/lib/services/steamService';
-import { PreprocessingService } from '@/lib/services/preprocessingService';
-import { AnalysisService } from '@/lib/services/analysisService';
-import { MLService } from '@/lib/services/mlService';
-import { RecommendationService } from '@/lib/services/recommendationService';
+import { NextRequest, NextResponse } from "next/server";
+import { SteamService } from "@/lib/services/steamService";
+import { PreprocessingService } from "@/lib/services/preprocessingService";
+import { AnalysisService } from "@/lib/services/analysisService";
+import { MLService } from "@/lib/services/mlService";
+import { RecommendationService } from "@/lib/services/recommendationService";
 
 export async function POST(request: NextRequest) {
   try {
     const { steamId } = await request.json();
 
     if (!steamId) {
-      return NextResponse.json(
-        { error: 'SteamID requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "SteamID requis" }, { status: 400 });
     }
 
     const apiKey = process.env.STEAM_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Clé API Steam non configurée' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Clé API Steam non configurée" }, { status: 500 });
     }
 
     // Initialiser les services
@@ -35,19 +29,11 @@ export async function POST(request: NextRequest) {
     const playerData = await steamService.getPlayerData(steamId);
 
     if (playerData.games.length === 0) {
-      return NextResponse.json(
-        { error: 'Aucun jeu trouvé pour ce SteamID' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Aucun jeu trouvé pour ce SteamID" }, { status: 404 });
     }
 
     // 2. Préprocessing
-    const features = await preprocessingService.computeFeatures(
-      playerData.games,
-      playerData.totalPlaytime,
-      playerData.accountAge || 0,
-      steamService
-    );
+    const features = await preprocessingService.computeFeatures(playerData.games, playerData.totalPlaytime, playerData.accountAge || 0, steamService);
 
     // 3. Analyse statistique
     const stats = analysisService.computeStats(playerData.games, features);
@@ -56,27 +42,13 @@ export async function POST(request: NextRequest) {
     const encodedFeatures = preprocessingService.encodeCategoricalFeatures(features);
 
     // 5. Classification (avec Groq si disponible)
-    const classification = await mlService.classifyPlayer(
-      encodedFeatures,
-      playerData.totalPlaytime,
-      playerData.games,
-      features
-    );
+    const classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
 
     // 6. Clustering (avec Groq si disponible)
-    const clustering = await mlService.clusterPlayer(
-      encodedFeatures,
-      playerData.games,
-      features
-    );
+    const clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
 
     // 7. Recommandations
-    const recommendations = await recommendationService.generateRecommendations(
-      playerData.games,
-      features,
-      clustering,
-      steamService
-    );
+    const recommendations = await recommendationService.generateRecommendations(playerData.games, features, clustering, steamService);
 
     // Retourner tous les résultats
     return NextResponse.json({
@@ -85,20 +57,16 @@ export async function POST(request: NextRequest) {
         games: playerData.games,
         totalGames: playerData.totalGames,
         totalPlaytime: playerData.totalPlaytime,
-        accountAge: playerData.accountAge
+        accountAge: playerData.accountAge,
       },
       features,
       stats,
       classification,
       clustering,
-      recommendations
+      recommendations,
     });
-
   } catch (error: any) {
-    console.error('Erreur lors de l\'analyse:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erreur lors de l\'analyse' },
-      { status: 500 }
-    );
+    console.error("Erreur lors de l'analyse:", error);
+    return NextResponse.json({ error: error.message || "Erreur lors de l'analyse" }, { status: 500 });
   }
 }

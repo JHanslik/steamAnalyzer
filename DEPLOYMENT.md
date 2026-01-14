@@ -6,6 +6,7 @@
 
 - Compte Vercel
 - Clé API Steam (obtenez-la sur https://steamcommunity.com/dev/apikey)
+- Clé API Groq (optionnel, obtenez-la sur https://console.groq.com/) - pour une meilleure analyse ML
 
 ### Étapes
 
@@ -37,6 +38,7 @@
      * Ajoutez : `STEAM_API_KEY` avec votre clé API Steam
      * Sélectionnez les environnements (Production, Preview, Development)
      * Cliquez sur "Save"
+   - **Optionnel** : Ajoutez `GROQ_API_KEY` pour utiliser Groq (llama-3.3-70b-versatile) au lieu de la logique basique
 
 4. **Redéployer**
    - Vercel redéploiera automatiquement avec les nouvelles variables
@@ -65,10 +67,12 @@
 ## Variables d'environnement requises
 
 - `STEAM_API_KEY` : Votre clé API Steam (obligatoire)
+- `GROQ_API_KEY` : Votre clé API Groq (optionnel) - Si non fournie, l'application utilisera une logique basique en fallback
 
 ## Notes
 
 - Le projet utilise Next.js 14 avec App Router
 - Les API Routes sont dans `/app/api`
+- L'analyse ML utilise Groq (llama-3.3-70b-versatile) si `GROQ_API_KEY` est configurée, sinon fallback vers logique basique
 - Les calculs ML sont effectués côté serveur uniquement
 - Assurez-vous que votre clé API Steam est valide et active

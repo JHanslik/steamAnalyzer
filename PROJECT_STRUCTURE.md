@@ -28,6 +28,7 @@ steamAnalyzer/
 ├── lib/                          # Bibliothèques et services
 │   └── services/
 │       ├── analysisService.ts    # Service d'analyse statistique
+│       ├── groqService.ts        # Service Groq (IA pour ML)
 │       ├── mlService.ts          # Service Machine Learning
 │       ├── preprocessingService.ts # Service de preprocessing
 │       ├── recommendationService.ts # Service de recommandation
@@ -66,13 +67,13 @@ steamAnalyzer/
 - **Frontend** : Next.js 14, React, TypeScript, Tailwind CSS
 - **Backend** : Next.js API Routes
 - **Data Science** : Calculs statistiques manuels
-- **Machine Learning** : ml-kmeans (clustering), fonction sigmoïde (classification)
+- **Machine Learning** : Groq (llama-3.3-70b-versatile) pour classification et clustering, avec fallback basique
 - **Visualisation** : Plotly.js via react-plotly.js
-- **API** : Steam Web API via axios
+- **API** : Steam Web API via axios, Groq API pour l'IA
 
 ## Points d'attention
 
-- Les calculs ML sont simplifiés pour la démonstration
-- En production, il faudrait un dataset d'entraînement pour améliorer les modèles
+- L'analyse ML utilise Groq si `GROQ_API_KEY` est configurée, sinon fallback vers logique basique
 - L'API Steam a des limites de taux, gérer les erreurs appropriément
 - Les genres sont récupérés via l'API Steam Store (peut être lent)
+- Groq est gratuit avec un plan généreux, mais nécessite une clé API

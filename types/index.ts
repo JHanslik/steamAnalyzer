@@ -39,7 +39,7 @@ export interface PlayerStats {
 }
 
 export interface ClassificationResult {
-  type: 'Hardcore' | 'Casual';
+  type: "Hardcore" | "Casual";
   probability: number;
   threshold: number;
   usingGroq?: boolean;

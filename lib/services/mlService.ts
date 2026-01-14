@@ -1,5 +1,5 @@
-import { ClassificationResult, ClusteringResult, ProcessedFeatures, SteamGame } from '@/types';
-import { GroqService } from './groqService';
+import { ClassificationResult, ClusteringResult, ProcessedFeatures, SteamGame } from "@/types";
+import { GroqService } from "./groqService";
 
 export class MLService {
   private groqService: GroqService | null = null;
@@ -16,19 +16,14 @@ export class MLService {
    * Classification : Hardcore vs Casual
    * Utilise Groq si disponible, sinon fallback vers logique basique
    */
-  async classifyPlayer(
-    features: number[],
-    totalPlaytime: number,
-    games?: SteamGame[],
-    processedFeatures?: ProcessedFeatures
-  ): Promise<ClassificationResult> {
+  async classifyPlayer(features: number[], totalPlaytime: number, games?: SteamGame[], processedFeatures?: ProcessedFeatures): Promise<ClassificationResult> {
     // Si Groq est disponible et qu'on a les données nécessaires, l'utiliser
     if (this.groqService && games && processedFeatures) {
       try {
         const result = await this.groqService.analyzePlayer(games, processedFeatures, totalPlaytime);
         return result.classification;
       } catch (error) {
-        console.error('Erreur Groq, fallback:', error);
+        console.error("Erreur Groq, fallback:", error);
         // Fallback vers logique basique
       }
     }
@@ -41,11 +36,7 @@ export class MLService {
    * Clustering pour regrouper les joueurs
    * Utilise Groq si disponible, sinon fallback vers logique basique
    */
-  async clusterPlayer(
-    features: number[],
-    games?: SteamGame[],
-    processedFeatures?: ProcessedFeatures
-  ): Promise<ClusteringResult> {
+  async clusterPlayer(features: number[], games?: SteamGame[], processedFeatures?: ProcessedFeatures): Promise<ClusteringResult> {
     // Si Groq est disponible et qu'on a les données nécessaires, l'utiliser
     if (this.groqService && games && processedFeatures) {
       try {
@@ -53,7 +44,7 @@ export class MLService {
         const result = await this.groqService.analyzePlayer(games, processedFeatures, totalPlaytime);
         return result.clustering;
       } catch (error) {
-        console.error('Erreur Groq, fallback:', error);
+        console.error("Erreur Groq, fallback:", error);
         // Fallback vers logique basique
       }
     }
@@ -71,10 +62,10 @@ export class MLService {
     const probability = Math.min(0.95, Math.max(0.05, hours / 1000));
 
     return {
-      type: hours > threshold ? 'Hardcore' : 'Casual',
+      type: hours > threshold ? "Hardcore" : "Casual",
       probability,
       threshold,
-      usingGroq: false
+      usingGroq: false,
     };
   }
 
@@ -86,34 +77,33 @@ export class MLService {
     const totalGames = features[2] || 0;
     const genreCount = Object.keys({}).length; // Approximatif
 
-    let clusterLabel = 'Casual';
+    let clusterLabel = "Casual";
     let cluster = 1;
     const characteristics: string[] = [];
 
     if (hours > 1000) {
-      clusterLabel = 'Hardcore';
+      clusterLabel = "Hardcore";
       cluster = 2;
-      characteristics.push('Temps de jeu très élevé');
+      characteristics.push("Temps de jeu très élevé");
     } else if (totalGames > 100) {
-      clusterLabel = 'Explorateur';
+      clusterLabel = "Explorateur";
       cluster = 0;
-      characteristics.push('Grand collectionneur');
+      characteristics.push("Grand collectionneur");
     } else if (genreCount < 3) {
-      clusterLabel = 'Spécialisé';
+      clusterLabel = "Spécialisé";
       cluster = 3;
-      characteristics.push('Focus sur un genre');
+      characteristics.push("Focus sur un genre");
     }
 
     if (characteristics.length === 0) {
-      characteristics.push('Profil équilibré');
+      characteristics.push("Profil équilibré");
     }
 
     return {
       cluster,
       clusterLabel,
       characteristics,
-      usingGroq: false
+      usingGroq: false,
     };
   }
-
 }
