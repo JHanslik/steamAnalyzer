@@ -4,6 +4,9 @@ import { PreprocessingService } from "@/lib/services/preprocessingService";
 import { AnalysisService } from "@/lib/services/analysisService";
 import { MLService } from "@/lib/services/mlService";
 import { RecommendationService } from "@/lib/services/recommendationService";
+import { GameEnrichmentService } from "@/lib/services/gameEnrichmentService";
+import { GameSuccessService } from "@/lib/services/gameSuccessService";
+import { GamePredictionService } from "@/lib/services/gamePredictionService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +27,7 @@ export async function POST(request: NextRequest) {
     const analysisService = new AnalysisService();
     const mlService = new MLService();
     const recommendationService = new RecommendationService();
+    const enrichmentService = new GameEnrichmentService();
 
     // 1. Récupérer les données Steam
     const playerData = await steamService.getPlayerData(steamId);
@@ -32,23 +36,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Aucun jeu trouvé pour ce SteamID" }, { status: 404 });
     }
 
-    // 2. Préprocessing
+    // 2. Enrichir les jeux avec les données Steam Store
+    const enrichedGames = await enrichmentService.enrichGames(playerData.games, steamService, 20);
+
+    // 3. Préprocessing
     const features = await preprocessingService.computeFeatures(playerData.games, playerData.totalPlaytime, playerData.accountAge || 0, steamService);
 
-    // 3. Analyse statistique
+    // 4. Analyse statistique
     const stats = analysisService.computeStats(playerData.games, features);
 
-    // 4. Encoder les features pour le ML
+    // 5. Encoder les features pour le ML
     const encodedFeatures = preprocessingService.encodeCategoricalFeatures(features);
 
-    // 5. Classification (avec Groq si disponible)
+    // 6. Classification (avec Groq si disponible)
     const classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
 
-    // 6. Clustering (avec Groq si disponible)
+    // 7. Clustering (avec Groq si disponible)
     const clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
 
-    // 7. Recommandations
+    // 8. Recommandations
     const recommendations = await recommendationService.generateRecommendations(playerData.games, features, clustering, steamService);
+
+    // 9. Analyse des facteurs de succès (avec Groq si disponible)
+    let successFactors = null;
+    let gamePredictions = null;
+    
+    const groqApiKey = process.env.GROQ_API_KEY;
+    if (groqApiKey) {
+      try {
+        const successService = new GameSuccessService(groqApiKey);
+        successFactors = await successService.analyzeSuccessFactors(enrichedGames);
+
+        // 10. Prédictions pour les jeux
+        const predictionService = new GamePredictionService(groqApiKey);
+        gamePredictions = await predictionService.predictGames(enrichedGames, enrichedGames, successFactors.topFactors);
+      } catch (error) {
+        console.error('Erreur lors de l\'analyse des facteurs de succès:', error);
+        // Continue sans ces analyses
+      }
+    }
 
     // Retourner tous les résultats
     return NextResponse.json({
@@ -64,6 +90,8 @@ export async function POST(request: NextRequest) {
       classification,
       clustering,
       recommendations,
+      successFactors,
+      gamePredictions,
     });
   } catch (error: any) {
     console.error("Erreur lors de l'analyse:", error);

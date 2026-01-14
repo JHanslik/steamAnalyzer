@@ -77,6 +77,28 @@ export class SteamService {
   }
 
   /**
+   * Récupère le nombre de joueurs actuels pour un jeu
+   */
+  async getCurrentPlayers(appid: number): Promise<number | null> {
+    try {
+      const response = await axios.get(`${STEAM_API_BASE}/ISteamUserStats/GetNumberOfCurrentPlayers/v1/`, {
+        params: {
+          appid: appid
+        }
+      });
+
+      if (response.data?.response?.result === 1) {
+        return response.data.response.player_count || null;
+      }
+
+      return null;
+    } catch (error: any) {
+      // Silencieux car tous les jeux n'ont pas cette stat
+      return null;
+    }
+  }
+
+  /**
    * Récupère les informations du joueur
    */
   async getPlayerSummary(steamId: string): Promise<any> {

@@ -8,6 +8,8 @@ import GenreChart from "@/components/GenreChart";
 import RecommendationsList from "@/components/RecommendationsList";
 import AnalysisConsole from "@/components/AnalysisConsole";
 import RawDataView from "@/components/RawDataView";
+import SuccessFactorsView from "@/components/SuccessFactorsView";
+import GamePredictionsView from "@/components/GamePredictionsView";
 import { AnalysisResult } from "@/types";
 
 interface LogEntry {
@@ -83,6 +85,15 @@ export default function Home() {
 
       addLog("Clustering par style de jeu...", "info");
       await new Promise((resolve) => setTimeout(resolve, 400));
+
+      addLog("Enrichissement des données des jeux...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      addLog("Analyse des facteurs de succès...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      addLog("Prédiction du succès des jeux...", "info");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       addLog("Génération des recommandations...", "info");
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -228,6 +239,16 @@ export default function Home() {
 
             {/* Recommandations */}
             <RecommendationsList recommendations={results.recommendations} />
+
+            {/* Facteurs de succès */}
+            {results.successFactors && (
+              <SuccessFactorsView successFactors={results.successFactors} />
+            )}
+
+            {/* Prédictions des jeux */}
+            {results.gamePredictions && results.gamePredictions.length > 0 && (
+              <GamePredictionsView predictions={results.gamePredictions} />
+            )}
 
             {/* Données brutes */}
             <RawDataView playerData={results.playerData} />

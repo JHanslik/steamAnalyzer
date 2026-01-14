@@ -7,6 +7,28 @@ export interface SteamGame {
   img_logo_url?: string;
 }
 
+export interface EnrichedGame extends SteamGame {
+  // Données enrichies depuis Steam Store
+  price?: {
+    initial?: number;
+    final?: number;
+    currency?: string;
+    discount_percent?: number;
+  };
+  release_date?: string;
+  positive_ratings?: number;
+  negative_ratings?: number;
+  total_ratings?: number;
+  rating_ratio?: number; // positive / total
+  genres?: string[];
+  categories?: string[];
+  achievements?: {
+    total?: number;
+    unlocked?: number;
+  };
+  current_players?: number;
+}
+
 export interface SteamPlayerData {
   steamid: string;
   games: SteamGame[];
@@ -61,6 +83,31 @@ export interface GameRecommendation {
   matchScore: number;
 }
 
+export interface SuccessFactor {
+  name: string;
+  importance: number; // 0-1
+  impact: 'positive' | 'negative' | 'neutral';
+  description: string;
+}
+
+export interface GamePrediction {
+  appid: number;
+  gameName: string;
+  willSucceed: boolean;
+  probability: number; // 0-1
+  factors: SuccessFactor[];
+  explanation: string;
+  usingGroq?: boolean;
+  model?: string;
+}
+
+export interface SuccessFactorsAnalysis {
+  topFactors: SuccessFactor[];
+  summary: string;
+  usingGroq?: boolean;
+  model?: string;
+}
+
 export interface AnalysisResult {
   playerData: SteamPlayerData;
   features: ProcessedFeatures;
@@ -68,4 +115,6 @@ export interface AnalysisResult {
   classification: ClassificationResult;
   clustering: ClusteringResult;
   recommendations: GameRecommendation[];
+  successFactors?: SuccessFactorsAnalysis;
+  gamePredictions?: GamePrediction[];
 }
