@@ -63,11 +63,15 @@ export class CacheService {
    */
   cleanup(): void {
     const now = Date.now();
-    for (const [key, entry] of this.cache.entries()) {
+    const keysToDelete: string[] = [];
+    
+    this.cache.forEach((entry, key) => {
       if (now - entry.timestamp > this.ttl) {
-        this.cache.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    
+    keysToDelete.forEach(key => this.cache.delete(key));
   }
 
   /**
