@@ -181,7 +181,13 @@ export class GroqUnifiedService {
       // Mettre en cache
       cacheService.set(steamId, result, 'groq');
 
-      return result;
+      // Retourner avec null au lieu de undefined pour correspondre au type de retour
+      return {
+        classification,
+        clustering,
+        successFactors: successFactors ?? null,
+        gamePredictions: gamePredictions ?? null,
+      };
 
     } catch (error: any) {
       // Si rate limit, retourner null pour utiliser fallback
