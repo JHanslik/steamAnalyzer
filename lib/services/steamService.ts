@@ -99,6 +99,43 @@ export class SteamService {
   }
 
   /**
+   * Récupère les statistiques de reviews (notes positives/négatives) depuis l'API Steam Reviews
+   */
+  async getGameReviews(appid: number): Promise<{ positive: number; negative: number; total: number; review_score?: number; review_score_desc?: string } | null> {
+    try {
+      const response = await axios.get(`${STEAM_STORE_API}/appreviews/${appid}`, {
+        params: {
+          json: 1,
+          language: 'all',
+          num_per_page: 1 // On veut juste les stats, pas les reviews
+        },
+        timeout: 5000 // Timeout de 5 secondes
+      });
+
+      if (response.data?.success === 1 && response.data?.query_summary) {
+        const summary = response.data.query_summary;
+        return {
+          positive: summary.total_positive || 0,
+          negative: summary.total_negative || 0,
+          total: summary.total_reviews || 0,
+          review_score: summary.review_score,
+          review_score_desc: summary.review_score_desc
+        };
+      }
+
+      return null;
+    } catch (error: any) {
+      // Ignorer silencieusement les erreurs 403 (rate limit) et autres erreurs
+      // L'API Steam Reviews peut être limitée ou bloquée
+      if (error.response?.status !== 403) {
+        // Logger seulement les erreurs non-403
+        console.error(`Erreur lors de la récupération des reviews du jeu ${appid}:`, error.message);
+      }
+      return null;
+    }
+  }
+
+  /**
    * Récupère les informations du joueur
    */
   async getPlayerSummary(steamId: string): Promise<any> {

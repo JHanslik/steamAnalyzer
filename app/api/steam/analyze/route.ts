@@ -5,8 +5,8 @@ import { AnalysisService } from "@/lib/services/analysisService";
 import { MLService } from "@/lib/services/mlService";
 import { RecommendationService } from "@/lib/services/recommendationService";
 import { GameEnrichmentService } from "@/lib/services/gameEnrichmentService";
-import { GameSuccessService } from "@/lib/services/gameSuccessService";
-import { GamePredictionService } from "@/lib/services/gamePredictionService";
+import { GroqUnifiedService } from "@/lib/services/groqUnifiedService";
+import { cacheService } from "@/lib/services/cacheService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,35 +48,61 @@ export async function POST(request: NextRequest) {
     // 5. Encoder les features pour le ML
     const encodedFeatures = preprocessingService.encodeCategoricalFeatures(features);
 
-    // 6. Classification (avec Groq si disponible)
-    const classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
-
-    // 7. Clustering (avec Groq si disponible)
-    const clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
-
-    // 8. Recommandations
-    const recommendations = await recommendationService.generateRecommendations(playerData.games, features, clustering, steamService);
-
-    // 9. Analyse des facteurs de succès (avec Groq si disponible)
+    // 6. Analyse Groq unifiée (classification, clustering, facteurs, prédictions en 1 seul appel)
+    let classification;
+    let clustering;
     let successFactors = null;
     let gamePredictions = null;
+    let groqStatus = 'unavailable'; // 'available', 'unavailable', 'rate_limited', 'cached'
     
     const groqApiKey = process.env.GROQ_API_KEY;
     if (groqApiKey) {
       try {
-        const successService = new GameSuccessService(groqApiKey);
-        successFactors = await successService.analyzeSuccessFactors(enrichedGames);
+        const groqUnified = new GroqUnifiedService(groqApiKey);
+        const groqResult = await groqUnified.analyzeComplete(
+          steamId,
+          playerData.games,
+          enrichedGames,
+          features,
+          playerData.totalPlaytime
+        );
 
-        // 10. Prédictions pour les jeux
-        const predictionService = new GamePredictionService(groqApiKey);
-        gamePredictions = await predictionService.predictGames(enrichedGames, enrichedGames, successFactors.topFactors);
-      } catch (error) {
-        console.error('Erreur lors de l\'analyse des facteurs de succès:', error);
-        // Continue sans ces analyses
+        classification = groqResult.classification;
+        clustering = groqResult.clustering;
+        successFactors = groqResult.successFactors;
+        gamePredictions = groqResult.gamePredictions;
+
+        // Déterminer le statut
+        if (classification.usingGroq) {
+          const cached = cacheService.get(steamId, 'groq');
+          groqStatus = cached ? 'cached' : 'available';
+        } else {
+          groqStatus = 'rate_limited';
+        }
+      } catch (error: any) {
+        console.error('Erreur lors de l\'analyse Groq unifiée:', error);
+        
+        // Si rate limit, utiliser fallback
+        if (error.response?.data?.error?.code === 'rate_limit_exceeded') {
+          groqStatus = 'rate_limited';
+        } else {
+          groqStatus = 'unavailable';
+        }
+
+        // Fallback vers MLService
+        classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
+        clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
       }
+    } else {
+      // Pas de clé Groq, utiliser MLService
+      classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
+      clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
     }
 
-    // Retourner tous les résultats
+    // 7. Recommandations
+    const recommendations = await recommendationService.generateRecommendations(playerData.games, features, clustering, steamService);
+
+    // Retourner tous les résultats avec le statut Groq
     return NextResponse.json({
       playerData: {
         steamid: playerData.steamid,
@@ -92,6 +118,7 @@ export async function POST(request: NextRequest) {
       recommendations,
       successFactors,
       gamePredictions,
+      groqStatus, // 'available', 'unavailable', 'rate_limited', 'cached'
     });
   } catch (error: any) {
     console.error("Erreur lors de l'analyse:", error);

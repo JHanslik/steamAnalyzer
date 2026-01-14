@@ -92,7 +92,7 @@ export default function Home() {
       addLog("Analyse des facteurs de succès...", "info");
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      addLog("Prédiction du succès des jeux...", "info");
+      addLog("Analyse du succès global des jeux (notes, joueurs, etc.)...", "info");
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       addLog("Génération des recommandations...", "info");
@@ -139,6 +139,34 @@ export default function Home() {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-8">
             <p>{error}</p>
+          </div>
+        )}
+
+        {/* Message de statut Groq */}
+        {results && (results as any).groqStatus && (
+          <div className={`mb-4 p-4 rounded-lg ${
+            (results as any).groqStatus === 'cached' 
+              ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+              : (results as any).groqStatus === 'rate_limited'
+              ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
+              : (results as any).groqStatus === 'available'
+              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+              : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+          }`}>
+            <p className="text-sm font-medium">
+              {(results as any).groqStatus === 'cached' && (
+                <>📦 <span className="text-blue-700 dark:text-blue-300">Analyse IA depuis le cache (données mises en cache il y a moins de 24h)</span></>
+              )}
+              {(results as any).groqStatus === 'rate_limited' && (
+                <>⚠️ <span className="text-yellow-700 dark:text-yellow-300">Quota Groq atteint - Analyse basique utilisée (statistiques et recommandations toujours disponibles)</span></>
+              )}
+              {(results as any).groqStatus === 'available' && (
+                <>✅ <span className="text-green-700 dark:text-green-300">Analyse IA complète disponible</span></>
+              )}
+              {(results as any).groqStatus === 'unavailable' && (
+                <>ℹ️ <span className="text-gray-700 dark:text-gray-300">Analyse basique utilisée (clé Groq non configurée ou indisponible)</span></>
+              )}
+            </p>
           </div>
         )}
 

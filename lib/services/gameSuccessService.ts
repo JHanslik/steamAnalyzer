@@ -14,51 +14,23 @@ export class GameSuccessService {
    */
   async analyzeSuccessFactors(games: EnrichedGame[]): Promise<SuccessFactorsAnalysis> {
     try {
-      // Préparer les données pour Groq
+      // Préparer les données pour Groq (format compact)
       const gamesData = games
         .filter(g => g.playtime_forever > 0)
-        .slice(0, 30) // Limiter pour éviter trop de tokens
+        .slice(0, 15) // Réduit de 30 à 15 jeux
         .map(g => ({
-          name: g.name,
-          playtime: Math.round(g.playtime_forever / 60),
-          price: g.price?.final || 0,
-          rating_ratio: g.rating_ratio || 0,
-          genres: g.genres?.join(', ') || 'Unknown',
-          release_date: g.release_date || 'Unknown',
-          achievements_total: g.achievements?.total || 0
+          n: g.name.substring(0, 30), // Nom tronqué à 30 caractères
+          h: Math.round(g.playtime_forever / 60), // heures
+          p: Math.round((g.price?.final || 0) / 100), // prix en euros
+          r: Math.round((g.rating_ratio || 0) * 100), // ratio en %
+          g: g.genres?.slice(0, 2).join(',') || 'U' // 2 premiers genres seulement
         }));
 
       // Définir ce qu'est un "jeu qui fonctionne"
       const successfulGames = games.filter(g => (g.playtime_forever || 0) / 60 > 20);
       const failedGames = games.filter(g => (g.playtime_forever || 0) / 60 < 5);
 
-      const prompt = `Tu es un expert en analyse statistique de jeux vidéo. Analyse ce dataset de jeux Steam et identifie les FACTEURS qui font qu'un jeu "fonctionne" (est bien joué) vs ceux qui ne fonctionnent pas.
-
-Dataset (${gamesData.length} jeux):
-${JSON.stringify(gamesData, null, 2)}
-
-Jeux qui fonctionnent (temps > 20h): ${successfulGames.length}
-Jeux qui ne fonctionnent pas (temps < 5h): ${failedGames.length}
-
-Réponds UNIQUEMENT avec un JSON valide dans ce format exact:
-{
-  "topFactors": [
-    {
-      "name": "nom du facteur",
-      "importance": nombre entre 0 et 1,
-      "impact": "positive" ou "negative" ou "neutral",
-      "description": "explication du facteur"
-    }
-  ],
-  "summary": "Résumé de l'analyse en 2-3 phrases"
-}
-
-Critères pour identifier les facteurs:
-- Compare les jeux qui fonctionnent vs ceux qui ne fonctionnent pas
-- Identifie les corrélations (prix, notes, genres, date, etc.)
-- Donne une importance (0-1) à chaque facteur
-- Maximum 8 facteurs les plus importants
-- Les descriptions doivent être en français`;
+      const prompt = `Analyse ce dataset Steam et identifie les facteurs de succès. Dataset:${JSON.stringify(gamesData)}. Succès (>20h):${successfulGames.length}, Échecs (<5h):${failedGames.length}. JSON:{"topFactors":[{"name":"facteur","importance":0-1,"impact":"positive|negative|neutral","description":"court"}],"summary":"2 phrases max"}. Max 6 facteurs.`;
 
       const response = await axios.post(
         this.baseUrl,
@@ -75,7 +47,7 @@ Critères pour identifier les facteurs:
             }
           ],
           temperature: 0.3,
-          max_tokens: 1000,
+          max_tokens: 500, // Réduit de 1000 à 500
           response_format: { type: 'json_object' }
         },
         {
@@ -105,7 +77,7 @@ Critères pour identifier les facteurs:
       }
 
       // Valider et formater
-      const topFactors: SuccessFactor[] = (parsed.topFactors || []).slice(0, 8).map((f: any) => ({
+      const topFactors: SuccessFactor[] = (parsed.topFactors || []).slice(0, 6).map((f: any) => ({
         name: f.name || 'Facteur inconnu',
         importance: Math.max(0, Math.min(1, f.importance || 0.5)),
         impact: f.impact === 'negative' ? 'negative' : f.impact === 'neutral' ? 'neutral' : 'positive',

@@ -19,43 +19,14 @@ export class GroqService {
   ): Promise<{ classification: ClassificationResult; clustering: ClusteringResult }> {
     try {
       // Préparer le contexte pour Groq
+      // Réduire à 8 jeux pour économiser des tokens
       const topGames = games
         .sort((a, b) => (b.playtime_forever || 0) - (a.playtime_forever || 0))
-        .slice(0, 15)
-        .map((g) => `${g.name} (${Math.round((g.playtime_forever || 0) / 60)}h)`)
-        .join(", ");
+        .slice(0, 8)
+        .map((g) => `${g.name.substring(0, 30)}(${Math.round((g.playtime_forever || 0) / 60)}h)`)
+        .join(",");
 
-      const prompt = `Tu es un expert en analyse de profils de joueurs Steam. Analyse ce profil et réponds UNIQUEMENT avec un JSON valide, sans texte avant ou après.
-
-Profil du joueur:
-- Temps de jeu total: ${Math.round(totalPlaytime / 60)} heures
-- Nombre de jeux: ${features.totalGames}
-- Temps moyen par jeu: ${Math.round(features.averagePlaytime / 60)} heures
-- Genre dominant: ${features.dominantGenre}
-- Style de jeu: ${features.gameStyle}
-- Ancienneté du compte: ${features.accountAge} jours
-- Top jeux joués: ${topGames}
-
-Réponds avec un JSON dans ce format exact:
-{
-  "classification": {
-    "type": "Hardcore" ou "Casual",
-    "probability": nombre entre 0 et 1,
-    "threshold": 500
-  },
-  "clustering": {
-    "cluster": 0, 1, 2 ou 3,
-    "clusterLabel": "Explorateur", "Casual", "Hardcore" ou "Spécialisé",
-    "characteristics": ["caractéristique 1", "caractéristique 2", ...]
-  }
-}
-
-Critères:
-- Hardcore: temps total élevé (>500h), jeux approfondis, engagement fort
-- Casual: temps modéré, jeux variés, engagement occasionnel
-- Explorateur: beaucoup de jeux différents, temps par jeu faible
-- Spécialisé: focus sur un genre/style, temps élevé sur quelques jeux
-- Les caractéristiques doivent être en français et pertinentes (2-4 max)`;
+      const prompt = `Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["car1","car2"]}}. Hardcore:>500h. Casual:modéré. Explorateur:beaucoup jeux. Spécialisé:focus genre. Max 3 caractéristiques.`;
 
       const response = await axios.post(
         this.baseUrl,
@@ -72,7 +43,7 @@ Critères:
             },
           ],
           temperature: 0.3,
-          max_tokens: 500,
+          max_tokens: 300, // Réduit de 500 à 300
           response_format: { type: "json_object" },
         },
         {
