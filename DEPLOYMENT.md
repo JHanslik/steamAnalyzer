@@ -28,7 +28,15 @@
 3. **Configurer les variables d'environnement**
 
    - Dans le dashboard Vercel, allez dans Settings > Environment Variables
-   - Ajoutez : `STEAM_API_KEY` avec votre clé API Steam
+   - Si la variable `STEAM_API_KEY` existe déjà :
+     * Cliquez sur la variable existante pour la modifier
+     * Mettez à jour la valeur avec votre clé API Steam
+     * Cliquez sur "Save"
+   - Si la variable n'existe pas :
+     * Cliquez sur "Add New"
+     * Ajoutez : `STEAM_API_KEY` avec votre clé API Steam
+     * Sélectionnez les environnements (Production, Preview, Development)
+     * Cliquez sur "Save"
 
 4. **Redéployer**
    - Vercel redéploiera automatiquement avec les nouvelles variables

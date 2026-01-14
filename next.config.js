@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  env: {
-    STEAM_API_KEY: process.env.STEAM_API_KEY,
-  },
+  // Les variables d'environnement sont automatiquement disponibles dans Vercel
+  // Pas besoin de les déclarer dans env pour les API Routes
   webpack: (config, { isServer }) => {
     // Configuration pour les modules CommonJS
     if (!isServer) {
