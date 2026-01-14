@@ -104,7 +104,7 @@ export class GameEnrichmentService {
       // Récupérer le nombre de joueurs actuels
       try {
         const currentPlayers = await steamService.getCurrentPlayers(game.appid);
-        enriched.current_players = currentPlayers;
+        enriched.current_players = currentPlayers ?? undefined;
       } catch (error) {
         // Silencieux si échec
       }
