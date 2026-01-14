@@ -1,0 +1,5 @@
+{
+  "env": {
+    "STEAM_API_KEY": "@steam_api_key"
+  }
+}
