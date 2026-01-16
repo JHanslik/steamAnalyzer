@@ -255,7 +255,7 @@ export default function Home() {
                           <strong className="text-gray-900 dark:text-white">Features quantitatives</strong>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-blue-500 overflow-x-auto">
-                          <div className="text-gray-500">// preprocessingService.ts - computeFeatures()</div>
+                          <div className="text-gray-500">{'/*'} preprocessingService.ts - computeFeatures() {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">totalGames</span> = <span className="text-blue-300">games</span>.<span className="text-yellow-300">length</span>;
                           </div>
@@ -268,7 +268,7 @@ export default function Home() {
                           <div className="ml-4">
                             : <span className="text-orange-400">0</span>;
                           </div>
-                          <div className="mt-3 text-gray-500">// Calcul F2P basé sur prix réel (gratuit = prix === 0)</div>
+                          <div className="mt-3 text-gray-500">{'/*'} Calcul F2P basé sur prix réel (gratuit = prix === 0) {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">if</span> (<span className="text-blue-300">enrichedGames</span> &amp;&amp; <span className="text-blue-300">enrichedGames</span>.<span className="text-yellow-300">length</span> &gt; <span className="text-orange-400">0</span>) {'{'}
                           </div>
@@ -295,7 +295,7 @@ export default function Home() {
                           <strong className="text-gray-900 dark:text-white">Distribution des genres</strong>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-green-500 overflow-x-auto">
-                          <div className="text-gray-500">// Accumulation par genre avec temps de jeu</div>
+                          <div className="text-gray-500">{'/*'} Accumulation par genre avec temps de jeu {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-blue-300">genres</span>.<span className="text-yellow-300">forEach</span>(<span className="text-blue-300">genre</span> =&gt; {'{'}
                           </div>
@@ -310,12 +310,12 @@ export default function Home() {
                             <span className="text-blue-300">genreDistribution</span>[<span className="text-blue-300">genre</span>] += <span className="text-blue-300">playtime</span>;
                           </div>
                           <div>{'});'}</div>
-                          <div className="mt-3 text-gray-500">// Résultat (minutes cumulées par genre):</div>
+                          <div className="mt-3 text-gray-500">{'/*'} Résultat (minutes cumulées par genre): {'*/'}</div>
                           <div className="mt-2 text-yellow-200">
                             {'{'}
                           </div>
                           <div className="ml-4 text-yellow-200">
-                            <span className="text-green-400">&quot;Action&quot;</span>: <span className="text-orange-400">12000</span>,  <span className="text-gray-500">// minutes</span>
+                            <span className="text-green-400">&quot;Action&quot;</span>: <span className="text-orange-400">12000</span>,  <span className="text-gray-500">{'/*'} minutes {'*/'}</span>
                           </div>
                           <div className="ml-4 text-yellow-200">
                             <span className="text-green-400">&quot;RPG&quot;</span>: <span className="text-orange-400">18000</span>,
@@ -334,7 +334,7 @@ export default function Home() {
                           <strong className="text-gray-900 dark:text-white">Détermination du style de jeu</strong>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-purple-500 overflow-x-auto">
-                          <div className="text-gray-500">// preprocessingService.ts - determineGameStyle()</div>
+                          <div className="text-gray-500">{'/*'} preprocessingService.ts - determineGameStyle() {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">shortGames</span> = <span className="text-blue-300">games</span>.<span className="text-yellow-300">filter</span>(<span className="text-blue-300">g</span> =&gt;
                           </div>
@@ -368,7 +368,7 @@ export default function Home() {
                           <strong className="text-gray-900 dark:text-white">Encodage catégoriel → numérique</strong>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-yellow-500 overflow-x-auto">
-                          <div className="text-gray-500">// encodeCategoricalFeatures() - Pour ML</div>
+                          <div className="text-gray-500">{'/*'} encodeCategoricalFeatures() - Pour ML {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">genreMap</span> = {'{'}
                           </div>
@@ -380,25 +380,25 @@ export default function Home() {
                             <span className="text-purple-400">return</span> [
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">totalPlaytime</span>,    <span className="text-gray-500">// 45000</span>
+                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">totalPlaytime</span>,    <span className="text-gray-500">{'/*'} 45000 {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">averagePlaytime</span>,   <span className="text-gray-500">// 300</span>
+                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">averagePlaytime</span>,   <span className="text-gray-500">{'/*'} 300 {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">totalGames</span>,        <span className="text-gray-500">// 150</span>
+                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">totalGames</span>,        <span className="text-gray-500">{'/*'} 150 {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">freeToPlayRatio</span>,  <span className="text-gray-500">// 0.2</span>
+                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">freeToPlayRatio</span>,  <span className="text-gray-500">{'/*'} 0.2 {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">accountAge</span>,        <span className="text-gray-500">// 1825</span>
+                            <span className="text-blue-300">features</span>.<span className="text-yellow-300">accountAge</span>,        <span className="text-gray-500">{'/*'} 1825 {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">genreEncoded</span>,              <span className="text-gray-500">// 2 (RPG)</span>
+                            <span className="text-blue-300">genreEncoded</span>,              <span className="text-gray-500">{'/*'} 2 (RPG) {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            <span className="text-blue-300">styleEncoded</span>               <span className="text-gray-500">// 1 (Investi)</span>
+                            <span className="text-blue-300">styleEncoded</span>               <span className="text-gray-500">{'/*'} 1 (Investi) {'*/'}</span>
                           </div>
                           <div>];</div>
                         </div>
@@ -422,21 +422,21 @@ export default function Home() {
                           <span className="text-xs text-gray-500">Q1=25h, Q2=75h, Q3=375h, IQR=350h</span>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-blue-500 overflow-x-auto">
-                          <div className="text-gray-500">// advancedStatsService.ts - calculateQuartiles()</div>
+                          <div className="text-gray-500">{'/*'} advancedStatsService.ts - calculateQuartiles() {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">sorted</span> = [...<span className="text-blue-300">values</span>].<span className="text-yellow-300">sort</span>((<span className="text-blue-300">a</span>, <span className="text-blue-300">b</span>) =&gt; <span className="text-blue-300">a</span> - <span className="text-blue-300">b</span>);
                           </div>
                           <div className="mt-1">
-                            <span className="text-purple-400">const</span> <span className="text-blue-300">q2</span> = <span className="text-yellow-300">calculateMedian</span>(<span className="text-blue-300">sorted</span>);  <span className="text-gray-500">// Médiane (50%)</span>
+                            <span className="text-purple-400">const</span> <span className="text-blue-300">q2</span> = <span className="text-yellow-300">calculateMedian</span>(<span className="text-blue-300">sorted</span>);  <span className="text-gray-500">{'/*'} Médiane (50%) {'*/'}</span>
                           </div>
                           <div className="mt-1">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">lowerHalf</span> = <span className="text-blue-300">sorted</span>.<span className="text-yellow-300">slice</span>(<span className="text-orange-400">0</span>, <span className="text-yellow-300">Math.floor</span>(<span className="text-blue-300">n</span> / <span className="text-orange-400">2</span>));
                           </div>
                           <div className="mt-1">
-                            <span className="text-purple-400">const</span> <span className="text-blue-300">q1</span> = <span className="text-yellow-300">calculateMedian</span>(<span className="text-blue-300">lowerHalf</span>);  <span className="text-gray-500">// Q1 (25%)</span>
+                            <span className="text-purple-400">const</span> <span className="text-blue-300">q1</span> = <span className="text-yellow-300">calculateMedian</span>(<span className="text-blue-300">lowerHalf</span>);  <span className="text-gray-500">{'/*'} Q1 (25%) {'*/'}</span>
                           </div>
                           <div className="mt-1">
-                            <span className="text-purple-400">const</span> <span className="text-blue-300">iqr</span> = <span className="text-blue-300">q3</span> - <span className="text-blue-300">q1</span>;  <span className="text-gray-500">// IQR</span>
+                            <span className="text-purple-400">const</span> <span className="text-blue-300">iqr</span> = <span className="text-blue-300">q3</span> - <span className="text-blue-300">q1</span>;  <span className="text-gray-500">{'/*'} IQR {'*/'}</span>
                           </div>
                         </div>
                       </div>
@@ -448,7 +448,7 @@ export default function Home() {
                           <span className="text-xs text-gray-500">Formule: (n/(n-1)(n-2)) × Σ((x-μ)³)/σ³ → 1.2</span>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-pink-500 overflow-x-auto">
-                          <div className="text-gray-500">// calculateSkewness() - Mesure l&apos;asymétrie</div>
+                          <div className="text-gray-500">{'/*'} calculateSkewness() - Mesure l&apos;asymétrie {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">sumCubed</span> = <span className="text-blue-300">values</span>.<span className="text-yellow-300">reduce</span>((<span className="text-blue-300">sum</span>, <span className="text-blue-300">val</span>) =&gt; {'{'}
                           </div>
@@ -475,7 +475,7 @@ export default function Home() {
                           <span className="text-xs text-gray-500">Formule: [n(n+1)/(n-1)(n-2)(n-3)] × Σ((x-μ)⁴)/σ⁴ - 3 → 0.8</span>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-teal-500 overflow-x-auto">
-                          <div className="text-gray-500">// calculateKurtosis() - Mesure l&apos;aplatissement</div>
+                          <div className="text-gray-500">{'/*'} calculateKurtosis() - Mesure l&apos;aplatissement {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">sumFourth</span> = <span className="text-blue-300">values</span>.<span className="text-yellow-300">reduce</span>((<span className="text-blue-300">sum</span>, <span className="text-blue-300">val</span>) =&gt; {'{'}
                           </div>
@@ -505,7 +505,7 @@ export default function Home() {
                           <span className="text-xs text-gray-500">r = Σ((x-x̄)(y-ȳ)) / √(Σ(x-x̄)² × Σ(y-ȳ)²)</span>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-indigo-500 overflow-x-auto">
-                          <div className="text-gray-500">// calculatePearsonCorrelation() - Relation linéaire entre variables</div>
+                          <div className="text-gray-500">{'/*'} calculatePearsonCorrelation() - Relation linéaire entre variables {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">let</span> <span className="text-blue-300">numerator</span> = <span className="text-orange-400">0</span>, <span className="text-blue-300">sumSqX</span> = <span className="text-orange-400">0</span>, <span className="text-blue-300">sumSqY</span> = <span className="text-orange-400">0</span>;
                           </div>
@@ -548,7 +548,7 @@ export default function Home() {
                           <strong className="text-gray-900 dark:text-white">Construction du prompt optimisé</strong>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-green-500 overflow-x-auto">
-                          <div className="text-gray-500">// groqUnifiedService.ts - buildPrompt()</div>
+                          <div className="text-gray-500">{'/*'} groqUnifiedService.ts - buildPrompt() {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">topGames</span> = <span className="text-blue-300">games</span>
                           </div>
@@ -556,15 +556,15 @@ export default function Home() {
                             .<span className="text-yellow-300">sort</span>((<span className="text-blue-300">a</span>, <span className="text-blue-300">b</span>) =&gt; (<span className="text-blue-300">b</span>.<span className="text-yellow-300">playtime_forever</span> || <span className="text-orange-400">0</span>) - (<span className="text-blue-300">a</span>.<span className="text-yellow-300">playtime_forever</span> || <span className="text-orange-400">0</span>))
                           </div>
                           <div className="ml-4">
-                            .<span className="text-yellow-300">slice</span>(<span className="text-orange-400">0</span>, <span className="text-orange-400">8</span>)  <span className="text-gray-500">// Top 8 seulement</span>
+                            .<span className="text-yellow-300">slice</span>(<span className="text-orange-400">0</span>, <span className="text-orange-400">8</span>)  <span className="text-gray-500">{'/*'} Top 8 seulement {'*/'}</span>
                           </div>
                           <div className="ml-4">
-                            .<span className="text-yellow-300">map</span>((<span className="text-blue-300">g</span>) =&gt; <span className="text-green-400">&apos;`$</span>{'{'}<span className="text-blue-300">g</span>.<span className="text-yellow-300">name</span>.<span className="text-yellow-300">substring</span>(<span className="text-orange-400">0</span>, <span className="text-orange-400">25</span>)<span className="text-green-400">}(`$</span>{'{'}<span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-yellow-300">playtime_forever</span> || <span className="text-orange-400">0</span>) / <span className="text-orange-400">60</span>)<span className="text-green-400">}h)`&apos;</span>)
+                            .<span className="text-yellow-300">map</span>((<span className="text-blue-300">g</span>) =&gt; <span className="text-green-400">&apos;`$</span>{'{'}<span className="text-blue-300">g</span>.<span className="text-yellow-300">name</span>.<span className="text-yellow-300">substring</span>(<span className="text-orange-400">0</span>, <span className="text-orange-400">25</span>)<span className="text-green-400">{'}'}</span><span className="text-green-400">(`$</span>{'{'}<span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-yellow-300">playtime_forever</span> || <span className="text-orange-400">0</span>) / <span className="text-orange-400">60</span>)<span className="text-green-400">{'}'}h)`&apos;</span>)
                           </div>
                           <div className="ml-4">
                             .<span className="text-yellow-300">join</span>(<span className="text-green-400">&apos;,&apos;</span>);
                           </div>
-                          <div className="mt-3 text-gray-500">// Format compact pour économiser tokens</div>
+                          <div className="mt-3 text-gray-500">{'/*'} Format compact pour économiser tokens {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">topEnriched</span> = <span className="text-blue-300">enrichedGames</span>
                           </div>
@@ -578,16 +578,16 @@ export default function Home() {
                             .<span className="text-yellow-300">map</span>(<span className="text-blue-300">g</span> =&gt; ({' {'}
                           </div>
                           <div className="ml-8">
-                            <span className="text-blue-300">n</span>: <span className="text-blue-300">g</span>.<span className="text-yellow-300">name</span>.<span className="text-yellow-300">substring</span>(<span className="text-orange-400">0</span>, <span className="text-orange-400">25</span>),  <span className="text-gray-500">// nom</span>
+                            <span className="text-blue-300">n</span>: <span className="text-blue-300">g</span>.<span className="text-yellow-300">name</span>.<span className="text-yellow-300">substring</span>(<span className="text-orange-400">0</span>, <span className="text-orange-400">25</span>),  <span className="text-gray-500">{'/*'} nom {'*/'}</span>
                           </div>
                           <div className="ml-8">
-                            <span className="text-blue-300">h</span>: <span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-yellow-300">playtime_forever</span> || <span className="text-orange-400">0</span>) / <span className="text-orange-400">60</span>),  <span className="text-gray-500">// heures</span>
+                            <span className="text-blue-300">h</span>: <span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-yellow-300">playtime_forever</span> || <span className="text-orange-400">0</span>) / <span className="text-orange-400">60</span>),  <span className="text-gray-500">{'/*'} heures {'*/'}</span>
                           </div>
                           <div className="ml-8">
-                            <span className="text-blue-300">p</span>: <span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-blue-300">price</span>?.<span className="text-yellow-300">final</span> || <span className="text-orange-400">0</span>) / <span className="text-orange-400">100</span>),  <span className="text-gray-500">// prix</span>
+                            <span className="text-blue-300">p</span>: <span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-blue-300">price</span>?.<span className="text-yellow-300">final</span> || <span className="text-orange-400">0</span>) / <span className="text-orange-400">100</span>),  <span className="text-gray-500">{'/*'} prix {'*/'}</span>
                           </div>
                           <div className="ml-8">
-                            <span className="text-blue-300">r</span>: <span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-yellow-300">rating_ratio</span> || <span className="text-orange-400">0</span>) * <span className="text-orange-400">100</span>),  <span className="text-gray-500">// rating %</span>
+                            <span className="text-blue-300">r</span>: <span className="text-yellow-300">Math.round</span>((<span className="text-blue-300">g</span>.<span className="text-yellow-300">rating_ratio</span> || <span className="text-orange-400">0</span>) * <span className="text-orange-400">100</span>),  <span className="text-gray-500">{'/*'} rating % {'*/'}</span>
                           </div>
                           <div className="ml-4">{'});'}</div>
                         </div>
@@ -600,7 +600,7 @@ export default function Home() {
                           <strong className="text-gray-900 dark:text-white">Appel API Groq unifié</strong>
                         </div>
                         <div className="bg-gray-900 dark:bg-black text-green-400 font-mono text-xs p-3 rounded border-l-4 border-purple-500 overflow-x-auto">
-                          <div className="text-gray-500">// groqUnifiedService.ts - analyzeComplete()</div>
+                          <div className="text-gray-500">{'/*'} groqUnifiedService.ts - analyzeComplete() {'*/'}</div>
                           <div className="mt-2">
                             <span className="text-purple-400">const</span> <span className="text-blue-300">response</span> = <span className="text-purple-400">await</span> <span className="text-blue-300">axios</span>.<span className="text-yellow-300">post</span>(
                           </div>
@@ -625,7 +625,7 @@ export default function Home() {
                             <span className="text-blue-300">temperature</span>: <span className="text-orange-400">0.3</span>,
                           </div>
                           <div className="ml-8">
-                            <span className="text-blue-300">max_tokens</span>: <span className="text-orange-400">800</span>,  <span className="text-gray-500">// Optimisé</span>
+                            <span className="text-blue-300">max_tokens</span>: <span className="text-orange-400">800</span>,  <span className="text-gray-500">{'/*'} Optimisé {'*/'}</span>
                           </div>
                           <div className="ml-8">
                             <span className="text-blue-300">response_format</span>: {'{'} <span className="text-blue-300">type</span>: <span className="text-green-400">&apos;json_object&apos;</span> {'}'}
