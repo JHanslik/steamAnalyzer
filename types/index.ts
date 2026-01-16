@@ -108,10 +108,35 @@ export interface SuccessFactorsAnalysis {
   model?: string;
 }
 
+export interface AdvancedStats {
+  quartiles: {
+    q1: number;
+    q2: number;
+    q3: number;
+    iqr: number;
+  };
+  coefficientOfVariation: number;
+  skewness: number;
+  kurtosis: number;
+  correlations: {
+    playtimeVsPrice?: number;
+    playtimeVsRating?: number;
+    priceVsRating?: number;
+  };
+  explanations: {
+    quartiles: string;
+    coefficientOfVariation: string;
+    skewness: string;
+    kurtosis: string;
+    correlations: string;
+  };
+}
+
 export interface AnalysisResult {
   playerData: SteamPlayerData;
   features: ProcessedFeatures;
   stats: PlayerStats;
+  advancedStats?: AdvancedStats;
   classification: ClassificationResult;
   clustering: ClusteringResult;
   recommendations: GameRecommendation[];

@@ -10,6 +10,7 @@ import AnalysisConsole from "@/components/AnalysisConsole";
 import RawDataView from "@/components/RawDataView";
 import SuccessFactorsView from "@/components/SuccessFactorsView";
 import GamePredictionsView from "@/components/GamePredictionsView";
+import AdvancedStatsView from "@/components/AdvancedStatsView";
 import { AnalysisResult } from "@/types";
 
 interface LogEntry {
@@ -219,7 +220,7 @@ export default function Home() {
 
             {/* Statistiques détaillées */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Statistiques détaillées</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Statistiques descriptives de base</h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Moyenne</p>
@@ -243,6 +244,11 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Statistiques avancées */}
+            {results.advancedStats && (
+              <AdvancedStatsView advancedStats={results.advancedStats} />
+            )}
 
             {/* Caractéristiques du cluster */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">

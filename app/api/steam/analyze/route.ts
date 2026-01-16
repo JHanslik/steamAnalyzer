@@ -7,6 +7,7 @@ import { RecommendationService } from "@/lib/services/recommendationService";
 import { GameEnrichmentService } from "@/lib/services/gameEnrichmentService";
 import { GroqUnifiedService } from "@/lib/services/groqUnifiedService";
 import { cacheService } from "@/lib/services/cacheService";
+import { AdvancedStatsService } from "@/lib/services/advancedStatsService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest) {
 
     // 4. Analyse statistique
     const stats = analysisService.computeStats(playerData.games, features);
+
+    // 4.5. Statistiques avancées (équivalent R)
+    const advancedStatsService = new AdvancedStatsService();
+    const advancedStats = advancedStatsService.computeAdvancedStats(playerData.games, enrichedGames);
 
     // 5. Encoder les features pour le ML
     const encodedFeatures = preprocessingService.encodeCategoricalFeatures(features);
@@ -113,6 +118,7 @@ export async function POST(request: NextRequest) {
       },
       features,
       stats,
+      advancedStats,
       classification,
       clustering,
       recommendations,
