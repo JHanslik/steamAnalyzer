@@ -174,118 +174,168 @@ export default function Home() {
         {/* Résultats */}
         {results && (
           <div className="space-y-8">
-            {/* Statistiques principales */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatsCard
-                title="Temps de jeu total"
-                value={`${Math.round(results.playerData.totalPlaytime / 60)}h`}
-                subtitle={`${results.playerData.totalGames} jeux`}
-              />
-              <StatsCard title="Temps moyen par jeu" value={`${Math.round(results.features.averagePlaytime / 60)}h`} subtitle="Moyenne" />
-              <StatsCard
-                title="Type de joueur"
-                value={results.classification.type}
-                subtitle={
-                  <div className="space-y-1">
-                    <div>{Math.round(results.classification.probability * 100)}% de confiance</div>
-                    {results.classification.usingGroq ? (
-                      <div className="text-xs text-green-600 dark:text-green-400">🤖 Groq ({results.classification.model})</div>
-                    ) : (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">⚙️ Logique basique</div>
-                    )}
-                  </div>
-                }
-              />
-              <StatsCard
-                title="Cluster"
-                value={results.clustering.clusterLabel}
-                subtitle={
-                  <div className="space-y-1">
-                    <div>Cluster #{results.clustering.cluster}</div>
-                    {results.clustering.usingGroq ? (
-                      <div className="text-xs text-green-600 dark:text-green-400">🤖 Groq ({results.clustering.model})</div>
-                    ) : (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">⚙️ Logique basique</div>
-                    )}
-                  </div>
-                }
-              />
-            </div>
+            {/* ============================================ */}
+            {/* SECTION 1: VUE D'ENSEMBLE DU JOUEUR */}
+            {/* ============================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Vue d'ensemble</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Profil et caractéristiques principales</p>
+              </div>
 
-            {/* Graphiques */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PlaytimeChart games={results.playerData.games} />
-              <GenreChart genreDistribution={results.features.genreDistribution} />
-            </div>
+              {/* Statistiques principales */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard
+                  title="Temps de jeu total"
+                  value={`${Math.round(results.playerData.totalPlaytime / 60)}h`}
+                  subtitle={`${results.playerData.totalGames} jeux`}
+                />
+                <StatsCard title="Temps moyen par jeu" value={`${Math.round(results.features.averagePlaytime / 60)}h`} subtitle="Moyenne" />
+                <StatsCard
+                  title="Type de joueur"
+                  value={results.classification.type}
+                  subtitle={
+                    <div className="space-y-1">
+                      <div>{Math.round(results.classification.probability * 100)}% de confiance</div>
+                      {results.classification.usingGroq ? (
+                        <div className="text-xs text-green-600 dark:text-green-400">🤖 Groq ({results.classification.model})</div>
+                      ) : (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">⚙️ Logique basique</div>
+                      )}
+                    </div>
+                  }
+                />
+                <StatsCard
+                  title="Cluster"
+                  value={results.clustering.clusterLabel}
+                  subtitle={
+                    <div className="space-y-1">
+                      <div>Cluster #{results.clustering.cluster}</div>
+                      {results.clustering.usingGroq ? (
+                        <div className="text-xs text-green-600 dark:text-green-400">🤖 Groq ({results.clustering.model})</div>
+                      ) : (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">⚙️ Logique basique</div>
+                      )}
+                    </div>
+                  }
+                />
+              </div>
 
-            {/* Statistiques détaillées */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Statistiques descriptives de base</h2>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Moyenne</p>
-                  <p className="text-lg font-semibold">{Math.round(results.stats.mean / 60)}h</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Médiane</p>
-                  <p className="text-lg font-semibold">{Math.round(results.stats.median / 60)}h</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Minimum</p>
-                  <p className="text-lg font-semibold">{Math.round(results.stats.min / 60)}h</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Maximum</p>
-                  <p className="text-lg font-semibold">{Math.round(results.stats.max / 60)}h</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Écart-type</p>
-                  <p className="text-lg font-semibold">{Math.round(results.stats.std / 60)}h</p>
-                </div>
+              {/* Caractéristiques du profil */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Caractéristiques de votre profil</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li className="text-gray-700 dark:text-gray-300">
+                    Genre dominant: <strong>{results.features.dominantGenre}</strong>
+                  </li>
+                  <li className="text-gray-700 dark:text-gray-300">
+                    Style de jeu: <strong>{results.features.gameStyle}</strong>
+                  </li>
+                  <li className="text-gray-700 dark:text-gray-300">
+                    Ancienneté du compte: <strong>{results.features.accountAge} jours</strong>
+                  </li>
+                  {results.clustering.characteristics.length > 0 && (
+                    <li className="text-gray-700 dark:text-gray-300">
+                      Caractéristiques: <strong>{results.clustering.characteristics.join(", ")}</strong>
+                    </li>
+                  )}
+                </ul>
               </div>
             </div>
 
-            {/* Statistiques avancées */}
-            {results.advancedStats && (
-              <AdvancedStatsView advancedStats={results.advancedStats} />
-            )}
+            {/* ============================================ */}
+            {/* SECTION 2: ANALYSE DES DONNÉES */}
+            {/* ============================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Analyse des données</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Visualisations et statistiques détaillées</p>
+              </div>
 
-            {/* Caractéristiques du cluster */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Caractéristiques de votre profil</h2>
-              <ul className="list-disc list-inside space-y-2">
-                <li className="text-gray-700 dark:text-gray-300">
-                  Genre dominant: <strong>{results.features.dominantGenre}</strong>
-                </li>
-                <li className="text-gray-700 dark:text-gray-300">
-                  Style de jeu: <strong>{results.features.gameStyle}</strong>
-                </li>
-                <li className="text-gray-700 dark:text-gray-300">
-                  Ancienneté du compte: <strong>{results.features.accountAge} jours</strong>
-                </li>
-                {results.clustering.characteristics.length > 0 && (
-                  <li className="text-gray-700 dark:text-gray-300">
-                    Caractéristiques: <strong>{results.clustering.characteristics.join(", ")}</strong>
-                  </li>
-                )}
-              </ul>
+              {/* Graphiques */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <PlaytimeChart games={results.playerData.games} />
+                <GenreChart genreDistribution={results.features.genreDistribution} />
+              </div>
+
+              {/* Statistiques descriptives de base */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Statistiques descriptives de base</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Moyenne</p>
+                    <p className="text-lg font-semibold">{Math.round(results.stats.mean / 60)}h</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Médiane</p>
+                    <p className="text-lg font-semibold">{Math.round(results.stats.median / 60)}h</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Minimum</p>
+                    <p className="text-lg font-semibold">{Math.round(results.stats.min / 60)}h</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Maximum</p>
+                    <p className="text-lg font-semibold">{Math.round(results.stats.max / 60)}h</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Écart-type</p>
+                    <p className="text-lg font-semibold">{Math.round(results.stats.std / 60)}h</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statistiques avancées */}
+              {results.advancedStats && (
+                <AdvancedStatsView advancedStats={results.advancedStats} />
+              )}
             </div>
 
-            {/* Recommandations */}
-            <RecommendationsList recommendations={results.recommendations} />
+            {/* ============================================ */}
+            {/* SECTION 3: INSIGHTS IA */}
+            {/* ============================================ */}
+            {(results.successFactors || (results.gamePredictions && results.gamePredictions.length > 0)) && (
+              <div className="space-y-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Insights IA</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">Analyse approfondie des facteurs de succès et prédictions</p>
+                </div>
 
-            {/* Facteurs de succès */}
-            {results.successFactors && (
-              <SuccessFactorsView successFactors={results.successFactors} />
+                {/* Facteurs de succès */}
+                {results.successFactors && (
+                  <SuccessFactorsView successFactors={results.successFactors} />
+                )}
+
+                {/* Prédictions des jeux */}
+                {results.gamePredictions && results.gamePredictions.length > 0 && (
+                  <GamePredictionsView predictions={results.gamePredictions} />
+                )}
+              </div>
             )}
 
-            {/* Prédictions des jeux */}
-            {results.gamePredictions && results.gamePredictions.length > 0 && (
-              <GamePredictionsView predictions={results.gamePredictions} />
-            )}
+            {/* ============================================ */}
+            {/* SECTION 4: RECOMMANDATIONS */}
+            {/* ============================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Recommandations</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Jeux personnalisés basés sur votre profil</p>
+              </div>
 
-            {/* Données brutes */}
-            <RawDataView playerData={results.playerData} />
+              <RecommendationsList recommendations={results.recommendations} />
+            </div>
+
+            {/* ============================================ */}
+            {/* SECTION 5: DONNÉES DÉTAILLÉES */}
+            {/* ============================================ */}
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Données détaillées</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Accès aux données brutes pour analyse approfondie</p>
+              </div>
+
+              <RawDataView playerData={results.playerData} />
+            </div>
           </div>
         )}
       </div>
