@@ -1,5 +1,5 @@
 // Danfo.js utilisé uniquement dans analysisService
-import { SteamGame, ProcessedFeatures } from '@/types';
+import { SteamGame, ProcessedFeatures, EnrichedGame } from '@/types';
 
 export class PreprocessingService {
   /**
@@ -18,21 +18,62 @@ export class PreprocessingService {
   }
 
   /**
+   * Vérifie si un jeu est free-to-play (gratuit)
+   */
+  private async isFreeToPlay(game: SteamGame, steamService: any): Promise<boolean> {
+    try {
+      const details = await steamService.getGameDetails(game.appid);
+      // Un jeu est F2P si is_free est true OU si le prix final est 0
+      if (details?.is_free === true) {
+        return true;
+      }
+      if (details?.price_overview?.final === 0) {
+        return true;
+      }
+    } catch (error) {
+      // En cas d'erreur, on ne peut pas déterminer, on retourne false
+    }
+    return false;
+  }
+
+  /**
    * Calcule toutes les features nécessaires pour le ML
    */
   async computeFeatures(
     games: SteamGame[],
     totalPlaytime: number,
     accountAge: number,
-    steamService: any
+    steamService: any,
+    enrichedGames?: EnrichedGame[] // Optionnel : si disponible, utilise les prix réels
   ): Promise<ProcessedFeatures> {
     // Features quantitatives
     const totalGames = games.length;
     const averagePlaytime = totalGames > 0 ? totalPlaytime / totalGames : 0;
 
-    // Calculer le ratio de jeux free-to-play (approximation basée sur le prix)
-    // Pour simplifier, on considère les jeux avec très peu de temps comme potentiellement F2P
-    const freeToPlayCount = games.filter(g => g.playtime_forever < 10).length;
+    // Calculer le ratio de jeux free-to-play (basé sur le prix réel)
+    let freeToPlayCount = 0;
+    
+    if (enrichedGames && enrichedGames.length > 0) {
+      // Utiliser les données enrichies si disponibles (plus précis)
+      freeToPlayCount = enrichedGames.filter(g => {
+        // Un jeu est F2P si le prix final est 0 ou si is_free est true
+        return (g.price?.final === 0) || (g.price === undefined && g.playtime_forever > 0);
+      }).length;
+    } else {
+      // Sinon, vérifier via API pour les jeux (limité pour éviter trop d'appels)
+      const gamesToCheck = games.slice(0, Math.min(50, games.length));
+      for (const game of gamesToCheck) {
+        if (await this.isFreeToPlay(game, steamService)) {
+          freeToPlayCount++;
+        }
+      }
+      // Estimer pour le reste basé sur la proportion
+      if (games.length > gamesToCheck.length) {
+        const f2pRatio = freeToPlayCount / gamesToCheck.length;
+        freeToPlayCount += Math.round((games.length - gamesToCheck.length) * f2pRatio);
+      }
+    }
+    
     const freeToPlayRatio = totalGames > 0 ? freeToPlayCount / totalGames : 0;
 
     // Calculer la distribution des genres

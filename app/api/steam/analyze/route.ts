@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
       playerData.games,
       playerData.totalPlaytime,
       playerData.accountAge || 0,
-      services.steam
+      services.steam,
+      enrichedGames // Passer les jeux enrichis pour calculer le ratio F2P correctement
     );
     const stats = services.analysis.computeStats(playerData.games, features);
     const advancedStats = new AdvancedStatsService().computeAdvancedStats(
