@@ -1,5 +1,5 @@
 // Danfo.js utilisé uniquement dans analysisService
-import { SteamGame, ProcessedFeatures, EnrichedGame } from '@/types';
+import { SteamGame, ProcessedFeatures, EnrichedGame } from "@/types";
 
 export class PreprocessingService {
   /**
@@ -52,12 +52,12 @@ export class PreprocessingService {
 
     // Calculer le ratio de jeux free-to-play (basé sur le prix réel)
     let freeToPlayCount = 0;
-    
+
     if (enrichedGames && enrichedGames.length > 0) {
       // Utiliser les données enrichies si disponibles (plus précis)
-      freeToPlayCount = enrichedGames.filter(g => {
+      freeToPlayCount = enrichedGames.filter((g) => {
         // Un jeu est F2P si le prix final est 0 ou si is_free est true
-        return (g.price?.final === 0) || (g.price === undefined && g.playtime_forever > 0);
+        return g.price?.final === 0 || (g.price === undefined && g.playtime_forever > 0);
       }).length;
     } else {
       // Sinon, vérifier via API pour les jeux (limité pour éviter trop d'appels)
@@ -73,18 +73,19 @@ export class PreprocessingService {
         freeToPlayCount += Math.round((games.length - gamesToCheck.length) * f2pRatio);
       }
     }
-    
+
     const freeToPlayRatio = totalGames > 0 ? freeToPlayCount / totalGames : 0;
 
     // Calculer la distribution des genres
     const genreDistribution: Record<string, number> = {};
-    
+
     // Pour chaque jeu, récupérer les genres et accumuler le temps de jeu
-    for (const game of games.slice(0, 100)) { // Limiter pour éviter trop d'appels API
+    for (const game of games.slice(0, 100)) {
+      // Limiter pour éviter trop d'appels API
       const genres = await this.getGameGenres(game.appid, steamService);
       const playtime = game.playtime_forever || 0;
-      
-      genres.forEach(genre => {
+
+      genres.forEach((genre) => {
         if (!genreDistribution[genre]) {
           genreDistribution[genre] = 0;
         }
@@ -93,7 +94,7 @@ export class PreprocessingService {
     }
 
     // Trouver le genre dominant
-    let dominantGenre = 'Unknown';
+    let dominantGenre = "Unknown";
     let maxPlaytime = 0;
     for (const [genre, playtime] of Object.entries(genreDistribution)) {
       if (playtime > maxPlaytime) {
@@ -113,43 +114,39 @@ export class PreprocessingService {
       accountAge,
       dominantGenre,
       gameStyle,
-      genreDistribution
+      genreDistribution,
     };
   }
 
   /**
    * Détermine le style de jeu basé sur les caractéristiques
    */
-  private determineGameStyle(
-    games: SteamGame[],
-    genreDistribution: Record<string, number>,
-    totalPlaytime: number
-  ): string {
+  private determineGameStyle(games: SteamGame[], genreDistribution: Record<string, number>, totalPlaytime: number): string {
     // Analyser les patterns de jeu
     const avgPlaytimePerGame = totalPlaytime / games.length;
-    
+
     // Si beaucoup de jeux avec peu de temps = explorateur
-    const shortGames = games.filter(g => g.playtime_forever < 20).length;
+    const shortGames = games.filter((g) => g.playtime_forever < 20).length;
     if (shortGames / games.length > 0.5) {
-      return 'Explorateur';
+      return "Explorateur";
     }
 
     // Si temps moyen élevé = investi
     if (avgPlaytimePerGame > 100) {
-      return 'Investi';
+      return "Investi";
     }
 
     // Si beaucoup de genres différents = varié
     if (Object.keys(genreDistribution).length > 10) {
-      return 'Varié';
+      return "Varié";
     }
 
     // Si focus sur un genre = spécialisé
     if (Object.keys(genreDistribution).length < 3) {
-      return 'Spécialisé';
+      return "Spécialisé";
     }
 
-    return 'Équilibré';
+    return "Équilibré";
   }
 
   /**
@@ -158,39 +155,31 @@ export class PreprocessingService {
   encodeCategoricalFeatures(features: ProcessedFeatures): number[] {
     // Mapping des genres (top 10 genres communs)
     const genreMap: Record<string, number> = {
-      'Action': 0,
-      'Adventure': 1,
-      'RPG': 2,
-      'Strategy': 3,
-      'Simulation': 4,
-      'Sports': 5,
-      'Racing': 6,
-      'Indie': 7,
-      'Casual': 8,
-      'Unknown': 9
+      Action: 0,
+      Adventure: 1,
+      RPG: 2,
+      Strategy: 3,
+      Simulation: 4,
+      Sports: 5,
+      Racing: 6,
+      Indie: 7,
+      Casual: 8,
+      Unknown: 9,
     };
 
     // Mapping des styles
     const styleMap: Record<string, number> = {
-      'Explorateur': 0,
-      'Investi': 1,
-      'Varié': 2,
-      'Spécialisé': 3,
-      'Équilibré': 4
+      Explorateur: 0,
+      Investi: 1,
+      Varié: 2,
+      Spécialisé: 3,
+      Équilibré: 4,
     };
 
     const genreEncoded = genreMap[features.dominantGenre] || 9;
     const styleEncoded = styleMap[features.gameStyle] || 4;
 
     // Retourner un vecteur de features numériques
-    return [
-      features.totalPlaytime,
-      features.averagePlaytime,
-      features.totalGames,
-      features.freeToPlayRatio,
-      features.accountAge,
-      genreEncoded,
-      styleEncoded
-    ];
+    return [features.totalPlaytime, features.averagePlaytime, features.totalGames, features.freeToPlayRatio, features.accountAge, genreEncoded, styleEncoded];
   }
 }

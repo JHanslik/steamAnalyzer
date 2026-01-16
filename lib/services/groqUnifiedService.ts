@@ -21,13 +21,15 @@ export class GroqUnifiedService {
 
   /**
    * Analyse complète en un seul appel Groq (classification, clustering, facteurs, prédictions)
+   * @param recommendedGamesEnriched - Jeux recommandés enrichis pour les prédictions (optionnel)
    */
   async analyzeComplete(
     steamId: string,
     games: SteamGame[],
     enrichedGames: EnrichedGame[],
     features: ProcessedFeatures,
-    totalPlaytime: number
+    totalPlaytime: number,
+    recommendedGamesEnriched?: EnrichedGame[] // Jeux recommandés pour prédire leur succès
   ): Promise<{
     classification: ClassificationResult;
     clustering: ClusteringResult;
@@ -46,8 +48,13 @@ export class GroqUnifiedService {
     }
 
     try {
+      // Utiliser les jeux recommandés enrichis pour les prédictions si disponibles, sinon les jeux possédés
+      const gamesForPredictions = recommendedGamesEnriched && recommendedGamesEnriched.length > 0 
+        ? recommendedGamesEnriched 
+        : enrichedGames;
+      
       // Préparer les données pour le prompt
-      const prompt = this.buildPrompt(games, enrichedGames, features, totalPlaytime);
+      const prompt = this.buildPrompt(games, enrichedGames, features, totalPlaytime, gamesForPredictions);
 
       // Appel API Groq
       const response = await axios.post(
@@ -77,7 +84,7 @@ export class GroqUnifiedService {
       const classification = this.formatClassification(parsed);
       const clustering = this.formatClustering(parsed);
       const successFactors = this.formatSuccessFactors(parsed);
-      const gamePredictions = this.formatGamePredictions(parsed, enrichedGames);
+      const gamePredictions = this.formatGamePredictions(parsed, gamesForPredictions);
 
       // Mettre en cache
       const result = {
@@ -102,7 +109,7 @@ export class GroqUnifiedService {
       } else {
         console.error('Erreur Groq unifié:', error.response?.data || error.message);
       }
-      return this.fallbackAnalysis(features, totalPlaytime, enrichedGames);
+      return this.fallbackAnalysis(features, totalPlaytime, enrichedGames, recommendedGamesEnriched);
     }
   }
 
@@ -113,7 +120,8 @@ export class GroqUnifiedService {
     games: SteamGame[],
     enrichedGames: EnrichedGame[],
     features: ProcessedFeatures,
-    totalPlaytime: number
+    totalPlaytime: number,
+    gamesForPredictions?: EnrichedGame[]
   ): string {
     // Top jeux par temps de jeu
     const topGames = games
@@ -122,7 +130,7 @@ export class GroqUnifiedService {
       .map((g) => `${g.name.substring(0, 25)}(${Math.round((g.playtime_forever || 0) / 60)}h)`)
       .join(',');
 
-    // Top jeux enrichis (format compact)
+    // Top jeux enrichis (format compact) - jeux possédés pour l'analyse
     const topEnriched = enrichedGames
       .filter(g => g.playtime_forever > 0)
       .slice(0, 30)
@@ -135,7 +143,25 @@ export class GroqUnifiedService {
         j: g.current_players || 0
       }));
 
-    return `Analyse complète Steam. Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. Jeux:${JSON.stringify(topEnriched)}. JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["c1","c2","c3"]},"successFactors":{"topFactors":[{"name":"f","importance":0-1,"impact":"+|-|=","description":"court"}],"summary":"2 phrases"},"predictions":[{"gameName":"n","willSucceed":bool,"probability":0-1,"factors":[{"name":"f","importance":0-1,"impact":"+|-|="}],"explanation":"1 phrase"}]}. Max 10 facteurs, 15 prédictions, 3 facteurs par prédiction.`;
+    // Jeux recommandés pour les prédictions (si disponibles)
+    const recommendedForPredictions = gamesForPredictions && gamesForPredictions.length > 0
+      ? gamesForPredictions
+          .slice(0, 15)
+          .map(g => ({
+            n: g.name.substring(0, 25),
+            h: Math.round((g.playtime_forever || 0) / 60),
+            p: Math.round((g.price?.final || 0) / 100),
+            r: Math.round((g.rating_ratio || 0) * 100),
+            t: g.total_ratings || 0,
+            j: g.current_players || 0
+          }))
+      : null;
+
+    const predictionsContext = recommendedForPredictions 
+      ? ` Prédire succès pour jeux recommandés:${JSON.stringify(recommendedForPredictions)}.`
+      : '';
+
+    return `Analyse complète Steam. Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. Jeux possédés:${JSON.stringify(topEnriched)}.${predictionsContext} JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["c1","c2","c3"]},"successFactors":{"topFactors":[{"name":"f","importance":0-1,"impact":"+|-|=","description":"court"}],"summary":"2 phrases"},"predictions":[{"gameName":"n","willSucceed":bool,"probability":0-1,"factors":[{"name":"f","importance":0-1,"impact":"+|-|="}],"explanation":"1 phrase"}]}. Max 10 facteurs, 15 prédictions, 3 facteurs par prédiction.`;
   }
 
   /**
@@ -243,7 +269,8 @@ export class GroqUnifiedService {
   private fallbackAnalysis(
     features: ProcessedFeatures,
     totalPlaytime: number,
-    enrichedGames: EnrichedGame[]
+    enrichedGames: EnrichedGame[],
+    recommendedGamesEnriched?: EnrichedGame[]
   ): {
     classification: ClassificationResult;
     clustering: ClusteringResult;
@@ -310,8 +337,12 @@ export class GroqUnifiedService {
       usingGroq: false
     };
 
-    // Prédictions basiques
-    const gamePredictions: GamePrediction[] = enrichedGames
+    // Prédictions basiques - utiliser les jeux recommandés si disponibles
+    const gamesForPredictions = recommendedGamesEnriched && recommendedGamesEnriched.length > 0
+      ? recommendedGamesEnriched
+      : enrichedGames;
+    
+    const gamePredictions: GamePrediction[] = gamesForPredictions
       .slice(0, 15)
       .map(game => {
         const ratingRatio = game.rating_ratio || 0;

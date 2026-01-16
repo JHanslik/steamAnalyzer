@@ -745,7 +745,7 @@ export default function Home() {
                     <strong>Analyse des facteurs de succès</strong> : identification des éléments qui font qu&apos;un jeu fonctionne sur Steam
                   </li>
                   <li>
-                    <strong>Prédictions</strong> : évaluation du succès potentiel des jeux basée sur les données Steam
+                    <strong>Prédictions</strong> : évaluation du succès potentiel des jeux recommandés (non possédés) basée sur les données Steam globales (notes, nombre de joueurs, etc.)
                   </li>
                 </ul>
                 <p className="mt-2 text-sm">
@@ -1073,7 +1073,7 @@ get(key: string, type: string): Partial<AnalysisResult> | null {
               <div className="space-y-6">
                 <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
                   <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Insights IA</h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">Analyse approfondie des facteurs de succès et prédictions</p>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">Analyse approfondie des facteurs de succès et prédictions sur les jeux recommandés</p>
                 </div>
 
                 {/* Facteurs de succès */}

@@ -51,23 +51,47 @@ export async function POST(request: NextRequest) {
       enrichedGames
     );
 
-    // 4. Analyse IA (Groq ou fallback)
+    // 4. Analyse IA initiale (classification, clustering, facteurs) - sans prédictions pour l'instant
     const encodedFeatures = services.preprocessing.encodeCategoricalFeatures(features);
+    const aiAnalysisInitial = await performAIAnalysis(
+      steamId,
+      playerData,
+      enrichedGames,
+      features,
+      encodedFeatures,
+      services,
+      undefined // Pas de jeux recommandés encore
+    );
+
+    // 5. Générer les recommandations basées sur le clustering
+    const recommendations = await services.recommendation.generateRecommendations(
+      playerData.games,
+      features,
+      aiAnalysisInitial.clustering,
+      services.steam
+    );
+
+    // 6. Enrichir les jeux recommandés pour les prédictions
+    const recommendedGamesForEnrichment = recommendations.map(rec => ({
+      appid: rec.appid,
+      name: rec.name,
+      playtime_forever: 0 // Pas de temps de jeu car pas possédé
+    }));
+    const enrichedRecommendedGames = await services.enrichment.enrichGames(
+      recommendedGamesForEnrichment,
+      services.steam,
+      15 // Limiter à 15 jeux recommandés
+    );
+
+    // 7. Compléter l'analyse IA avec les prédictions sur les jeux recommandés
     const aiAnalysis = await performAIAnalysis(
       steamId,
       playerData,
       enrichedGames,
       features,
       encodedFeatures,
-      services
-    );
-
-    // 5. Générer les recommandations
-    const recommendations = await services.recommendation.generateRecommendations(
-      playerData.games,
-      features,
-      aiAnalysis.clustering,
-      services.steam
+      services,
+      enrichedRecommendedGames // Passer les jeux recommandés enrichis pour les prédictions
     );
 
     // Retourner tous les résultats
@@ -114,6 +138,7 @@ function initializeServices(steamApiKey: string) {
 
 /**
  * Effectue l'analyse IA (Groq si disponible, sinon fallback)
+ * @param recommendedGamesEnriched - Jeux recommandés enrichis pour les prédictions (optionnel)
  */
 async function performAIAnalysis(
   steamId: string,
@@ -121,7 +146,8 @@ async function performAIAnalysis(
   enrichedGames: any[],
   features: any,
   encodedFeatures: any,
-  services: ReturnType<typeof initializeServices>
+  services: ReturnType<typeof initializeServices>,
+  recommendedGamesEnriched?: any[]
 ) {
   const groqApiKey = process.env.GROQ_API_KEY;
   let groqStatus: 'available' | 'unavailable' | 'rate_limited' | 'cached' = 'unavailable';
@@ -152,7 +178,8 @@ async function performAIAnalysis(
       playerData.games,
       enrichedGames,
       features,
-      playerData.totalPlaytime
+      playerData.totalPlaytime,
+      recommendedGamesEnriched // Passer les jeux recommandés enrichis pour les prédictions
     );
 
     // Déterminer le statut
