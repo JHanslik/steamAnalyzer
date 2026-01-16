@@ -36,7 +36,7 @@ export class GroqUnifiedService {
   }> {
     // Vérifier le cache
     const cached = cacheService.get(steamId, 'groq');
-    if (cached && cached.classification && cached.clustering) {
+    if (cached?.classification && cached?.clustering) {
       return {
         classification: cached.classification as ClassificationResult,
         clustering: cached.clustering as ClusteringResult,
@@ -46,43 +46,20 @@ export class GroqUnifiedService {
     }
 
     try {
-      // Préparer les données compactes
-      const topGames = games
-        .sort((a, b) => (b.playtime_forever || 0) - (a.playtime_forever || 0))
-        .slice(0, 8)
-        .map((g) => `${g.name.substring(0, 25)}(${Math.round((g.playtime_forever || 0) / 60)}h)`)
-        .join(',');
+      // Préparer les données pour le prompt
+      const prompt = this.buildPrompt(games, enrichedGames, features, totalPlaytime);
 
-      const topEnriched = enrichedGames
-        .filter(g => g.playtime_forever > 0)
-        .slice(0, 10)
-        .map(g => ({
-          n: g.name.substring(0, 25),
-          h: Math.round((g.playtime_forever || 0) / 60),
-          p: Math.round((g.price?.final || 0) / 100),
-          r: Math.round((g.rating_ratio || 0) * 100),
-          t: g.total_ratings || 0,
-          j: g.current_players || 0
-        }));
-
-      const prompt = `Analyse complète Steam. Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. Jeux:${JSON.stringify(topEnriched)}. JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["c1","c2","c3"]},"successFactors":{"topFactors":[{"name":"f","importance":0-1,"impact":"+|-|=","description":"court"}],"summary":"2 phrases"},"predictions":[{"gameName":"n","willSucceed":bool,"probability":0-1,"factors":[{"name":"f","importance":0-1,"impact":"+|-|="}],"explanation":"1 phrase"}]}. Max 5 facteurs, 5 prédictions, 3 facteurs par prédiction.`;
-
+      // Appel API Groq
       const response = await axios.post(
         this.baseUrl,
         {
           model: 'llama-3.3-70b-versatile',
           messages: [
-            {
-              role: 'system',
-              content: 'Expert analyse Steam. Réponds UNIQUEMENT JSON valide, sans texte avant/après.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
+            { role: 'system', content: 'Expert analyse Steam. Réponds UNIQUEMENT JSON valide, sans texte avant/après.' },
+            { role: 'user', content: prompt }
           ],
           temperature: 0.3,
-          max_tokens: 800, // Unifié mais optimisé
+          max_tokens: 800,
           response_format: { type: 'json_object' }
         },
         {
@@ -93,95 +70,24 @@ export class GroqUnifiedService {
         }
       );
 
-      const content = response.data.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error('Réponse vide de Groq');
-      }
-
-      // Parser
-      let parsed;
-      try {
-        parsed = JSON.parse(content);
-      } catch (e) {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsed = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('Impossible de parser la réponse JSON de Groq');
-        }
-      }
+      // Parser la réponse JSON
+      const parsed = this.parseGroqResponse(response.data.choices[0]?.message?.content);
 
       // Formater les résultats
-      const classification: ClassificationResult = {
-        type: parsed.classification?.type === 'Hardcore' ? 'Hardcore' : 'Casual',
-        probability: Math.max(0, Math.min(1, parsed.classification?.probability || 0.5)),
-        threshold: parsed.classification?.threshold || 500,
-        usingGroq: true,
-        model: 'llama-3.3-70b-versatile',
-      };
+      const classification = this.formatClassification(parsed);
+      const clustering = this.formatClustering(parsed);
+      const successFactors = this.formatSuccessFactors(parsed);
+      const gamePredictions = this.formatGamePredictions(parsed, enrichedGames);
 
-      const clustering: ClusteringResult = {
-        cluster: Math.max(0, Math.min(3, parsed.clustering?.cluster || 0)),
-        clusterLabel: parsed.clustering?.clusterLabel || 'Casual',
-        characteristics: Array.isArray(parsed.clustering?.characteristics) 
-          ? parsed.clustering.characteristics.slice(0, 3) 
-          : ['Profil équilibré'],
-        usingGroq: true,
-        model: 'llama-3.3-70b-versatile',
-      };
-
-      // Facteurs de succès
-      let successFactors: SuccessFactorsAnalysis | null = null;
-      if (parsed.successFactors?.topFactors) {
-        const factors: SuccessFactor[] = parsed.successFactors.topFactors.slice(0, 5).map((f: any) => ({
-          name: f.name || 'Facteur',
-          importance: Math.max(0, Math.min(1, f.importance || 0.5)),
-          impact: f.impact === 'negative' ? 'negative' : f.impact === 'neutral' ? 'neutral' : 'positive',
-          description: f.description || ''
-        }));
-
-        successFactors = {
-          topFactors: factors,
-          summary: parsed.successFactors.summary || 'Analyse des facteurs de succès',
-          usingGroq: true,
-          model: 'llama-3.3-70b-versatile'
-        };
-      }
-
-      // Prédictions
-      let gamePredictions: GamePrediction[] | null = null;
-      if (Array.isArray(parsed.predictions) && parsed.predictions.length > 0) {
-        gamePredictions = parsed.predictions.slice(0, 5).map((p: any, idx: number) => {
-          const game = enrichedGames[idx] || enrichedGames[0];
-          return {
-            appid: game?.appid || 0,
-            gameName: p.gameName || game?.name || 'Jeu inconnu',
-            willSucceed: p.willSucceed === true,
-            probability: Math.max(0, Math.min(1, p.probability || 0.5)),
-            factors: (p.factors || []).slice(0, 3).map((f: any) => ({
-              name: f.name || 'Facteur',
-              importance: Math.max(0, Math.min(1, f.importance || 0.5)),
-              impact: f.impact === 'negative' ? 'negative' : f.impact === 'neutral' ? 'neutral' : 'positive',
-              description: f.description || ''
-            })),
-            explanation: p.explanation || 'Prédiction basée sur les données Steam',
-            usingGroq: true,
-            model: 'llama-3.3-70b-versatile'
-          };
-        });
-      }
-
+      // Mettre en cache
       const result = {
         classification,
         clustering,
         successFactors: successFactors ?? undefined,
         gamePredictions: gamePredictions ?? undefined,
       };
-
-      // Mettre en cache
       cacheService.set(steamId, result, 'groq');
 
-      // Retourner avec null au lieu de undefined pour correspondre au type de retour
       return {
         classification,
         clustering,
@@ -190,15 +96,145 @@ export class GroqUnifiedService {
       };
 
     } catch (error: any) {
-      // Si rate limit, retourner null pour utiliser fallback
-      if (error.response?.data?.error?.code === 'rate_limit_exceeded') {
+      const isRateLimit = error.response?.data?.error?.code === 'rate_limit_exceeded';
+      if (isRateLimit) {
         console.warn('Rate limit Groq atteint, utilisation du fallback');
-        return this.fallbackAnalysis(features, totalPlaytime, enrichedGames);
+      } else {
+        console.error('Erreur Groq unifié:', error.response?.data || error.message);
       }
-
-      console.error('Erreur Groq unifié:', error.response?.data || error.message);
       return this.fallbackAnalysis(features, totalPlaytime, enrichedGames);
     }
+  }
+
+  /**
+   * Construit le prompt compact pour Groq
+   */
+  private buildPrompt(
+    games: SteamGame[],
+    enrichedGames: EnrichedGame[],
+    features: ProcessedFeatures,
+    totalPlaytime: number
+  ): string {
+    // Top jeux par temps de jeu
+    const topGames = games
+      .sort((a, b) => (b.playtime_forever || 0) - (a.playtime_forever || 0))
+      .slice(0, 8)
+      .map((g) => `${g.name.substring(0, 25)}(${Math.round((g.playtime_forever || 0) / 60)}h)`)
+      .join(',');
+
+    // Top jeux enrichis (format compact)
+    const topEnriched = enrichedGames
+      .filter(g => g.playtime_forever > 0)
+      .slice(0, 10)
+      .map(g => ({
+        n: g.name.substring(0, 25),
+        h: Math.round((g.playtime_forever || 0) / 60),
+        p: Math.round((g.price?.final || 0) / 100),
+        r: Math.round((g.rating_ratio || 0) * 100),
+        t: g.total_ratings || 0,
+        j: g.current_players || 0
+      }));
+
+    return `Analyse complète Steam. Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. Jeux:${JSON.stringify(topEnriched)}. JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["c1","c2","c3"]},"successFactors":{"topFactors":[{"name":"f","importance":0-1,"impact":"+|-|=","description":"court"}],"summary":"2 phrases"},"predictions":[{"gameName":"n","willSucceed":bool,"probability":0-1,"factors":[{"name":"f","importance":0-1,"impact":"+|-|="}],"explanation":"1 phrase"}]}. Max 5 facteurs, 5 prédictions, 3 facteurs par prédiction.`;
+  }
+
+  /**
+   * Parse la réponse JSON de Groq (gère les cas où il y a du texte autour)
+   */
+  private parseGroqResponse(content: string | undefined): any {
+    if (!content) {
+      throw new Error('Réponse vide de Groq');
+    }
+
+    try {
+      return JSON.parse(content);
+    } catch {
+      // Essayer d'extraire le JSON si entouré de texte
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      throw new Error('Impossible de parser la réponse JSON de Groq');
+    }
+  }
+
+  /**
+   * Formate la classification depuis la réponse Groq
+   */
+  private formatClassification(parsed: any): ClassificationResult {
+    return {
+      type: parsed.classification?.type === 'Hardcore' ? 'Hardcore' : 'Casual',
+      probability: Math.max(0, Math.min(1, parsed.classification?.probability || 0.5)),
+      threshold: parsed.classification?.threshold || 500,
+      usingGroq: true,
+      model: 'llama-3.3-70b-versatile',
+    };
+  }
+
+  /**
+   * Formate le clustering depuis la réponse Groq
+   */
+  private formatClustering(parsed: any): ClusteringResult {
+    return {
+      cluster: Math.max(0, Math.min(3, parsed.clustering?.cluster || 0)),
+      clusterLabel: parsed.clustering?.clusterLabel || 'Casual',
+      characteristics: Array.isArray(parsed.clustering?.characteristics)
+        ? parsed.clustering.characteristics.slice(0, 3)
+        : ['Profil équilibré'],
+      usingGroq: true,
+      model: 'llama-3.3-70b-versatile',
+    };
+  }
+
+  /**
+   * Formate les facteurs de succès depuis la réponse Groq
+   */
+  private formatSuccessFactors(parsed: any): SuccessFactorsAnalysis | null {
+    if (!parsed.successFactors?.topFactors) {
+      return null;
+    }
+
+    const factors: SuccessFactor[] = parsed.successFactors.topFactors.slice(0, 5).map((f: any) => ({
+      name: f.name || 'Facteur',
+      importance: Math.max(0, Math.min(1, f.importance || 0.5)),
+      impact: f.impact === 'negative' ? 'negative' : f.impact === 'neutral' ? 'neutral' : 'positive',
+      description: f.description || ''
+    }));
+
+    return {
+      topFactors: factors,
+      summary: parsed.successFactors.summary || 'Analyse des facteurs de succès',
+      usingGroq: true,
+      model: 'llama-3.3-70b-versatile'
+    };
+  }
+
+  /**
+   * Formate les prédictions de jeux depuis la réponse Groq
+   */
+  private formatGamePredictions(parsed: any, enrichedGames: EnrichedGame[]): GamePrediction[] | null {
+    if (!Array.isArray(parsed.predictions) || parsed.predictions.length === 0) {
+      return null;
+    }
+
+    return parsed.predictions.slice(0, 5).map((p: any, idx: number) => {
+      const game = enrichedGames[idx] || enrichedGames[0];
+      return {
+        appid: game?.appid || 0,
+        gameName: p.gameName || game?.name || 'Jeu inconnu',
+        willSucceed: p.willSucceed === true,
+        probability: Math.max(0, Math.min(1, p.probability || 0.5)),
+        factors: (p.factors || []).slice(0, 3).map((f: any) => ({
+          name: f.name || 'Facteur',
+          importance: Math.max(0, Math.min(1, f.importance || 0.5)),
+          impact: f.impact === 'negative' ? 'negative' : f.impact === 'neutral' ? 'neutral' : 'positive',
+          description: f.description || ''
+        })),
+        explanation: p.explanation || 'Prédiction basée sur les données Steam',
+        usingGroq: true,
+        model: 'llama-3.3-70b-versatile'
+      };
+    });
   }
 
   /**

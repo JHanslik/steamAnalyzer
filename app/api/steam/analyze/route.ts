@@ -12,102 +12,64 @@ import { AdvancedStatsService } from "@/lib/services/advancedStatsService";
 export async function POST(request: NextRequest) {
   try {
     const { steamId } = await request.json();
-
     if (!steamId) {
       return NextResponse.json({ error: "SteamID requis" }, { status: 400 });
     }
 
-    const apiKey = process.env.STEAM_API_KEY;
-    if (!apiKey) {
+    const steamApiKey = process.env.STEAM_API_KEY;
+    if (!steamApiKey) {
       return NextResponse.json({ error: "Clé API Steam non configurée" }, { status: 500 });
     }
 
     // Initialiser les services
-    const steamService = new SteamService(apiKey);
-    const preprocessingService = new PreprocessingService();
-    const analysisService = new AnalysisService();
-    const mlService = new MLService();
-    const recommendationService = new RecommendationService();
-    const enrichmentService = new GameEnrichmentService();
+    const services = initializeServices(steamApiKey);
 
     // 1. Récupérer les données Steam
-    const playerData = await steamService.getPlayerData(steamId);
-
+    const playerData = await services.steam.getPlayerData(steamId);
     if (playerData.games.length === 0) {
       return NextResponse.json({ error: "Aucun jeu trouvé pour ce SteamID" }, { status: 404 });
     }
 
     // 2. Enrichir les jeux avec les données Steam Store
-    const enrichedGames = await enrichmentService.enrichGames(playerData.games, steamService, 20);
+    const enrichedGames = await services.enrichment.enrichGames(
+      playerData.games,
+      services.steam,
+      20
+    );
 
-    // 3. Préprocessing
-    const features = await preprocessingService.computeFeatures(playerData.games, playerData.totalPlaytime, playerData.accountAge || 0, steamService);
+    // 3. Préprocessing et analyse statistique
+    const features = await services.preprocessing.computeFeatures(
+      playerData.games,
+      playerData.totalPlaytime,
+      playerData.accountAge || 0,
+      services.steam
+    );
+    const stats = services.analysis.computeStats(playerData.games, features);
+    const advancedStats = new AdvancedStatsService().computeAdvancedStats(
+      playerData.games,
+      enrichedGames
+    );
 
-    // 4. Analyse statistique
-    const stats = analysisService.computeStats(playerData.games, features);
+    // 4. Analyse IA (Groq ou fallback)
+    const encodedFeatures = services.preprocessing.encodeCategoricalFeatures(features);
+    const aiAnalysis = await performAIAnalysis(
+      steamId,
+      playerData,
+      enrichedGames,
+      features,
+      encodedFeatures,
+      services
+    );
 
-    // 4.5. Statistiques avancées (équivalent R)
-    const advancedStatsService = new AdvancedStatsService();
-    const advancedStats = advancedStatsService.computeAdvancedStats(playerData.games, enrichedGames);
+    // 5. Générer les recommandations
+    const recommendations = await services.recommendation.generateRecommendations(
+      playerData.games,
+      features,
+      aiAnalysis.clustering,
+      services.steam
+    );
 
-    // 5. Encoder les features pour le ML
-    const encodedFeatures = preprocessingService.encodeCategoricalFeatures(features);
-
-    // 6. Analyse Groq unifiée (classification, clustering, facteurs, prédictions en 1 seul appel)
-    let classification;
-    let clustering;
-    let successFactors = null;
-    let gamePredictions = null;
-    let groqStatus = 'unavailable'; // 'available', 'unavailable', 'rate_limited', 'cached'
-    
-    const groqApiKey = process.env.GROQ_API_KEY;
-    if (groqApiKey) {
-      try {
-        const groqUnified = new GroqUnifiedService(groqApiKey);
-        const groqResult = await groqUnified.analyzeComplete(
-          steamId,
-          playerData.games,
-          enrichedGames,
-          features,
-          playerData.totalPlaytime
-        );
-
-        classification = groqResult.classification;
-        clustering = groqResult.clustering;
-        successFactors = groqResult.successFactors;
-        gamePredictions = groqResult.gamePredictions;
-
-        // Déterminer le statut
-        if (classification.usingGroq) {
-          const cached = cacheService.get(steamId, 'groq');
-          groqStatus = cached ? 'cached' : 'available';
-        } else {
-          groqStatus = 'rate_limited';
-        }
-      } catch (error: any) {
-        console.error('Erreur lors de l\'analyse Groq unifiée:', error);
-        
-        // Si rate limit, utiliser fallback
-        if (error.response?.data?.error?.code === 'rate_limit_exceeded') {
-          groqStatus = 'rate_limited';
-        } else {
-          groqStatus = 'unavailable';
-        }
-
-        // Fallback vers MLService
-        classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
-        clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
-      }
-    } else {
-      // Pas de clé Groq, utiliser MLService
-      classification = await mlService.classifyPlayer(encodedFeatures, playerData.totalPlaytime, playerData.games, features);
-      clustering = await mlService.clusterPlayer(encodedFeatures, playerData.games, features);
-    }
-
-    // 7. Recommandations
-    const recommendations = await recommendationService.generateRecommendations(playerData.games, features, clustering, steamService);
-
-    // Retourner tous les résultats avec le statut Groq
+    // Retourner tous les résultats
     return NextResponse.json({
       playerData: {
         steamid: playerData.steamid,
@@ -119,15 +81,112 @@ export async function POST(request: NextRequest) {
       features,
       stats,
       advancedStats,
-      classification,
-      clustering,
+      classification: aiAnalysis.classification,
+      clustering: aiAnalysis.clustering,
       recommendations,
-      successFactors,
-      gamePredictions,
-      groqStatus, // 'available', 'unavailable', 'rate_limited', 'cached'
+      successFactors: aiAnalysis.successFactors,
+      gamePredictions: aiAnalysis.gamePredictions,
+      groqStatus: aiAnalysis.groqStatus,
     });
   } catch (error: any) {
     console.error("Erreur lors de l'analyse:", error);
-    return NextResponse.json({ error: error.message || "Erreur lors de l'analyse" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Erreur lors de l'analyse" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Initialise tous les services nécessaires
+ */
+function initializeServices(steamApiKey: string) {
+  return {
+    steam: new SteamService(steamApiKey),
+    preprocessing: new PreprocessingService(),
+    analysis: new AnalysisService(),
+    ml: new MLService(),
+    recommendation: new RecommendationService(),
+    enrichment: new GameEnrichmentService(),
+  };
+}
+
+/**
+ * Effectue l'analyse IA (Groq si disponible, sinon fallback)
+ */
+async function performAIAnalysis(
+  steamId: string,
+  playerData: any,
+  enrichedGames: any[],
+  features: any,
+  encodedFeatures: any,
+  services: ReturnType<typeof initializeServices>
+) {
+  const groqApiKey = process.env.GROQ_API_KEY;
+  let groqStatus: 'available' | 'unavailable' | 'rate_limited' | 'cached' = 'unavailable';
+
+  // Si pas de clé Groq, utiliser le fallback directement
+  if (!groqApiKey) {
+    const classification = await services.ml.classifyPlayer(
+      encodedFeatures,
+      playerData.totalPlaytime,
+      playerData.games,
+      features
+    );
+    const clustering = await services.ml.clusterPlayer(encodedFeatures, playerData.games, features);
+    return {
+      classification,
+      clustering,
+      successFactors: null,
+      gamePredictions: null,
+      groqStatus,
+    };
+  }
+
+  // Essayer Groq
+  try {
+    const groqService = new GroqUnifiedService(groqApiKey);
+    const groqResult = await groqService.analyzeComplete(
+      steamId,
+      playerData.games,
+      enrichedGames,
+      features,
+      playerData.totalPlaytime
+    );
+
+    // Déterminer le statut
+    if (groqResult.classification.usingGroq) {
+      const cached = cacheService.get(steamId, 'groq');
+      groqStatus = cached ? 'cached' : 'available';
+    } else {
+      groqStatus = 'rate_limited';
+    }
+
+    return {
+      ...groqResult,
+      groqStatus,
+    };
+  } catch (error: any) {
+    // En cas d'erreur, utiliser le fallback
+    const isRateLimit = error.response?.data?.error?.code === 'rate_limit_exceeded';
+    groqStatus = isRateLimit ? 'rate_limited' : 'unavailable';
+
+    console.error('Erreur lors de l\'analyse Groq:', error);
+
+    const classification = await services.ml.classifyPlayer(
+      encodedFeatures,
+      playerData.totalPlaytime,
+      playerData.games,
+      features
+    );
+    const clustering = await services.ml.clusterPlayer(encodedFeatures, playerData.games, features);
+
+    return {
+      classification,
+      clustering,
+      successFactors: null,
+      gamePredictions: null,
+      groqStatus,
+    };
   }
 }

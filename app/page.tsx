@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import SteamIdForm from "@/components/SteamIdForm";
 import StatsCard from "@/components/StatsCard";
 import PlaytimeChart from "@/components/PlaytimeChart";
@@ -19,6 +19,23 @@ interface LogEntry {
   type: "info" | "success" | "warning" | "error";
 }
 
+// Messages de progression pour l'analyse
+const ANALYSIS_STEPS = [
+  { message: "Connexion à l'API Steam...", delay: 500 },
+  { message: "Récupération des données du profil...", delay: 300 },
+  { message: "Données récupérées avec succès", delay: 400, type: "success" as const },
+  { message: "Préprocessing des données...", delay: 500 },
+  { message: "Calcul des features quantitatives...", delay: 400 },
+  { message: "Analyse des genres et styles de jeu...", delay: 500 },
+  { message: "Calcul des statistiques descriptives...", delay: 400 },
+  { message: "Classification du type de joueur...", delay: 500 },
+  { message: "Clustering par style de jeu...", delay: 400 },
+  { message: "Enrichissement des données des jeux...", delay: 600 },
+  { message: "Analyse des facteurs de succès...", delay: 500 },
+  { message: "Analyse du succès global des jeux (notes, joueurs, etc.)...", delay: 500 },
+  { message: "Génération des recommandations...", delay: 500 },
+];
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AnalysisResult | null>(null);
@@ -36,87 +53,74 @@ export default function Home() {
     setLogs([...logsRef.current]);
   };
 
+  const clearLogs = () => {
+    logsRef.current = [];
+    setLogs([]);
+  };
+
   const handleAnalyze = async (steamId: string) => {
+    // Réinitialiser l'état
     setIsLoading(true);
     setError(null);
     setResults(null);
-    logsRef.current = [];
-    setLogs([]);
+    clearLogs();
 
     try {
-      // Étape 1: Connexion à l'API Steam
-      addLog("Connexion à l'API Steam...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Afficher les messages de progression
+      for (const step of ANALYSIS_STEPS) {
+        addLog(step.message, step.type || "info");
+        await new Promise((resolve) => setTimeout(resolve, step.delay));
+      }
 
-      addLog("Récupération des données du profil...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
+      // Appel API
       const response = await fetch("/api/steam/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ steamId }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        addLog(`Erreur: ${data.error || "Erreur lors de l'analyse"}`, "error");
-        throw new Error(data.error || "Erreur lors de l'analyse");
+        const errorData = await response.json();
+        const errorMessage = errorData.error || "Erreur lors de l'analyse";
+        addLog(`Erreur: ${errorMessage}`, "error");
+        throw new Error(errorMessage);
       }
 
-      // Simuler les étapes pendant le chargement
-      addLog("Données récupérées avec succès", "success");
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      addLog("Préprocessing des données...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      addLog("Calcul des features quantitatives...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      addLog("Analyse des genres et styles de jeu...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      addLog("Calcul des statistiques descriptives...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      addLog("Classification du type de joueur...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      addLog("Clustering par style de jeu...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      addLog("Enrichissement des données des jeux...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      addLog("Analyse des facteurs de succès...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      addLog("Analyse du succès global des jeux (notes, joueurs, etc.)...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      addLog("Génération des recommandations...", "info");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       const data = await response.json();
-
       addLog("Analyse terminée avec succès !", "success");
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       setResults(data);
 
-      // Effacer les logs après un court délai en cas de succès
-      setTimeout(() => {
-        setLogs([]);
-        logsRef.current = [];
-      }, 1000);
+      // Effacer les logs après succès
+      setTimeout(clearLogs, 1000);
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");
-      // Garder les logs en cas d'erreur
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper pour obtenir le style du statut Groq
+  const getGroqStatusStyle = (status: string) => {
+    const styles = {
+      cached: "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800",
+      rate_limited: "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800",
+      available: "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800",
+      unavailable: "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
+    };
+    return styles[status as keyof typeof styles] || styles.unavailable;
+  };
+
+  // Helper pour obtenir le message du statut Groq
+  const getGroqStatusMessage = (status: string) => {
+    const messages = {
+      cached: { icon: "📦", text: "Analyse IA depuis le cache (données mises en cache il y a moins de 24h)", color: "text-blue-700 dark:text-blue-300" },
+      rate_limited: { icon: "⚠️", text: "Quota Groq atteint - Analyse basique utilisée (statistiques et recommandations toujours disponibles)", color: "text-yellow-700 dark:text-yellow-300" },
+      available: { icon: "✅", text: "Analyse IA complète disponible", color: "text-green-700 dark:text-green-300" },
+      unavailable: { icon: "ℹ️", text: "Analyse basique utilisée (clé Groq non configurée ou indisponible)", color: "text-gray-700 dark:text-gray-300" },
+    };
+    return messages[status as keyof typeof messages] || messages.unavailable;
   };
 
   return (
@@ -144,32 +148,17 @@ export default function Home() {
         )}
 
         {/* Message de statut Groq */}
-        {results && (results as any).groqStatus && (
-          <div className={`mb-4 p-4 rounded-lg ${
-            (results as any).groqStatus === 'cached' 
-              ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-              : (results as any).groqStatus === 'rate_limited'
-              ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
-              : (results as any).groqStatus === 'available'
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-              : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-          }`}>
-            <p className="text-sm font-medium">
-              {(results as any).groqStatus === 'cached' && (
-                <>📦 <span className="text-blue-700 dark:text-blue-300">Analyse IA depuis le cache (données mises en cache il y a moins de 24h)</span></>
-              )}
-              {(results as any).groqStatus === 'rate_limited' && (
-                <>⚠️ <span className="text-yellow-700 dark:text-yellow-300">Quota Groq atteint - Analyse basique utilisée (statistiques et recommandations toujours disponibles)</span></>
-              )}
-              {(results as any).groqStatus === 'available' && (
-                <>✅ <span className="text-green-700 dark:text-green-300">Analyse IA complète disponible</span></>
-              )}
-              {(results as any).groqStatus === 'unavailable' && (
-                <>ℹ️ <span className="text-gray-700 dark:text-gray-300">Analyse basique utilisée (clé Groq non configurée ou indisponible)</span></>
-              )}
-            </p>
-          </div>
-        )}
+        {results && (results as any).groqStatus && (() => {
+          const status = (results as any).groqStatus;
+          const statusMessage = getGroqStatusMessage(status);
+          return (
+            <div className={`mb-4 p-4 rounded-lg ${getGroqStatusStyle(status)}`}>
+              <p className="text-sm font-medium">
+                {statusMessage.icon} <span className={statusMessage.color}>{statusMessage.text}</span>
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Résultats */}
         {results && (
