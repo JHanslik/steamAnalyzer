@@ -74,9 +74,9 @@ export default function AdvancedStatsView({ advancedStats }: AdvancedStatsViewPr
             </p>
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
+        <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-4 rounded whitespace-pre-line">
           {advancedStats.explanations.quartiles}
-        </p>
+        </div>
       </div>
 
       {/* Coefficient de Variation */}
@@ -108,9 +108,9 @@ export default function AdvancedStatsView({ advancedStats }: AdvancedStatsViewPr
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
+        <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-4 rounded whitespace-pre-line">
           {advancedStats.explanations.coefficientOfVariation}
-        </p>
+        </div>
       </div>
 
       {/* Skewness et Kurtosis */}
@@ -124,9 +124,9 @@ export default function AdvancedStatsView({ advancedStats }: AdvancedStatsViewPr
               {formatNumber(advancedStats.skewness)}
             </p>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
+          <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-4 rounded whitespace-pre-line">
             {advancedStats.explanations.skewness}
-          </p>
+          </div>
         </div>
 
         <div>
@@ -138,9 +138,9 @@ export default function AdvancedStatsView({ advancedStats }: AdvancedStatsViewPr
               {formatNumber(advancedStats.kurtosis)}
             </p>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
+          <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-4 rounded whitespace-pre-line">
             {advancedStats.explanations.kurtosis}
-          </p>
+          </div>
         </div>
       </div>
 
