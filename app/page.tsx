@@ -179,7 +179,7 @@ export default function Home() {
             {/* ============================================ */}
             <div className="space-y-6">
               <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Vue d'ensemble</h2>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Vue d&apos;ensemble</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">Profil et caractéristiques principales</p>
               </div>
 
