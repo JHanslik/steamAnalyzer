@@ -718,13 +718,15 @@ export default function Home() {
                     <strong>Corrélations de Pearson</strong> : analyse des relations linéaires entre variables (temps de jeu, prix, notes)
                   </li>
                 </ul>
-                <p className="mt-2 text-sm italic">
+                <p className="mt-2 text-sm italic break-words">
                   Toutes ces statistiques sont calculées manuellement en JavaScript selon les formules mathématiques standards, équivalentes aux fonctions R :{" "}
-                  <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">quantile()</code>,
-                  <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">sd()</code>,
-                  <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">skewness()</code>,
-                  <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">kurtosis()</code>,
-                  <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">cor()</code>.
+                  <span className="inline-flex flex-wrap gap-1">
+                    <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">quantile()</code>,
+                    <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">sd()</code>,
+                    <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">skewness()</code>,
+                    <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">kurtosis()</code>,
+                    <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">cor()</code>.
+                  </span>
                 </p>
               </div>
 
