@@ -118,14 +118,14 @@ export class GroqUnifiedService {
     // Top jeux par temps de jeu
     const topGames = games
       .sort((a, b) => (b.playtime_forever || 0) - (a.playtime_forever || 0))
-      .slice(0, 8)
+      .slice(0, 30)
       .map((g) => `${g.name.substring(0, 25)}(${Math.round((g.playtime_forever || 0) / 60)}h)`)
       .join(',');
 
     // Top jeux enrichis (format compact)
     const topEnriched = enrichedGames
       .filter(g => g.playtime_forever > 0)
-      .slice(0, 10)
+      .slice(0, 30)
       .map(g => ({
         n: g.name.substring(0, 25),
         h: Math.round((g.playtime_forever || 0) / 60),
@@ -135,7 +135,7 @@ export class GroqUnifiedService {
         j: g.current_players || 0
       }));
 
-    return `Analyse complète Steam. Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. Jeux:${JSON.stringify(topEnriched)}. JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["c1","c2","c3"]},"successFactors":{"topFactors":[{"name":"f","importance":0-1,"impact":"+|-|=","description":"court"}],"summary":"2 phrases"},"predictions":[{"gameName":"n","willSucceed":bool,"probability":0-1,"factors":[{"name":"f","importance":0-1,"impact":"+|-|="}],"explanation":"1 phrase"}]}. Max 5 facteurs, 5 prédictions, 3 facteurs par prédiction.`;
+    return `Analyse complète Steam. Profil:${Math.round(totalPlaytime / 60)}h,${features.totalGames}j,${Math.round(features.averagePlaytime / 60)}h/j,${features.dominantGenre},${features.gameStyle},${features.accountAge}j. Top:${topGames}. Jeux:${JSON.stringify(topEnriched)}. JSON:{"classification":{"type":"Hardcore|Casual","probability":0-1,"threshold":500},"clustering":{"cluster":0-3,"clusterLabel":"Explorateur|Casual|Hardcore|Spécialisé","characteristics":["c1","c2","c3"]},"successFactors":{"topFactors":[{"name":"f","importance":0-1,"impact":"+|-|=","description":"court"}],"summary":"2 phrases"},"predictions":[{"gameName":"n","willSucceed":bool,"probability":0-1,"factors":[{"name":"f","importance":0-1,"impact":"+|-|="}],"explanation":"1 phrase"}]}. Max 10 facteurs, 15 prédictions, 3 facteurs par prédiction.`;
   }
 
   /**
@@ -194,7 +194,7 @@ export class GroqUnifiedService {
       return null;
     }
 
-    const factors: SuccessFactor[] = parsed.successFactors.topFactors.slice(0, 5).map((f: any) => ({
+    const factors: SuccessFactor[] = parsed.successFactors.topFactors.slice(0, 10).map((f: any) => ({
       name: f.name || 'Facteur',
       importance: Math.max(0, Math.min(1, f.importance || 0.5)),
       impact: f.impact === 'negative' ? 'negative' : f.impact === 'neutral' ? 'neutral' : 'positive',
@@ -217,7 +217,7 @@ export class GroqUnifiedService {
       return null;
     }
 
-    return parsed.predictions.slice(0, 5).map((p: any, idx: number) => {
+    return parsed.predictions.slice(0, 15).map((p: any, idx: number) => {
       const game = enrichedGames[idx] || enrichedGames[0];
       return {
         appid: game?.appid || 0,
@@ -312,7 +312,7 @@ export class GroqUnifiedService {
 
     // Prédictions basiques
     const gamePredictions: GamePrediction[] = enrichedGames
-      .slice(0, 5)
+      .slice(0, 15)
       .map(game => {
         const ratingRatio = game.rating_ratio || 0;
         const totalRatings = game.total_ratings || 0;

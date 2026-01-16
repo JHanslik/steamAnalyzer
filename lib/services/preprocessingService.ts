@@ -61,7 +61,7 @@ export class PreprocessingService {
       }).length;
     } else {
       // Sinon, vérifier via API pour les jeux (limité pour éviter trop d'appels)
-      const gamesToCheck = games.slice(0, Math.min(50, games.length));
+      const gamesToCheck = games.slice(0, Math.min(100, games.length));
       for (const game of gamesToCheck) {
         if (await this.isFreeToPlay(game, steamService)) {
           freeToPlayCount++;
@@ -80,7 +80,7 @@ export class PreprocessingService {
     const genreDistribution: Record<string, number> = {};
     
     // Pour chaque jeu, récupérer les genres et accumuler le temps de jeu
-    for (const game of games.slice(0, 50)) { // Limiter pour éviter trop d'appels API
+    for (const game of games.slice(0, 100)) { // Limiter pour éviter trop d'appels API
       const genres = await this.getGameGenres(game.appid, steamService);
       const playtime = game.playtime_forever || 0;
       

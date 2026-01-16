@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const enrichedGames = await services.enrichment.enrichGames(
       playerData.games,
       services.steam,
-      20
+      50
     );
 
     // 3. Préprocessing et analyse statistique

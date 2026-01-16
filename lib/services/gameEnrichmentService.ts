@@ -119,7 +119,7 @@ export class GameEnrichmentService {
   /**
    * Enrichit plusieurs jeux (avec limitation pour éviter trop d'appels API)
    */
-  async enrichGames(games: SteamGame[], steamService: SteamService, limit: number = 20): Promise<EnrichedGame[]> {
+  async enrichGames(games: SteamGame[], steamService: SteamService, limit: number = 50): Promise<EnrichedGame[]> {
     // Enrichir seulement les jeux les plus joués pour éviter trop d'appels API
     const topGames = games
       .sort((a, b) => (b.playtime_forever || 0) - (a.playtime_forever || 0))
